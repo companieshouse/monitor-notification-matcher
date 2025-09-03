@@ -1,2 +1,4 @@
 # monitor-notification-matcher
-Notification handler once a user has been matched to a company
+
+Part of Monitor/Follow system. Identifies which users want to be notified of filings taken place for a particular
+company.
