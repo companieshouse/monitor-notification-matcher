@@ -1,6 +1,6 @@
 package uk.gov.companieshouse.monitornotification.matcher.serdes;
 
-import static uk.gov.companieshouse.monitornotification.matcher.Application.NAMESPACE;
+import static uk.gov.companieshouse.monitornotification.matcher.config.ApplicationConfig.NAMESPACE;
 
 import java.io.ByteArrayOutputStream;
 import java.io.IOException;
@@ -19,12 +19,13 @@ public class ChsDeltaSerialiser implements Serializer<ChsDelta> {
     private static final Logger LOGGER = LoggerFactory.getLogger(NAMESPACE);
 
     @Override
-    public byte[] serialize(String topic, ChsDelta data) {
+    public byte[] serialize(final String topic, final ChsDelta data) {
         ByteArrayOutputStream outputStream = new ByteArrayOutputStream();
         Encoder encoder = EncoderFactory.get().directBinaryEncoder(outputStream, null);
         DatumWriter<ChsDelta> writer = getDatumWriter();
         try {
             writer.write(data, encoder);
+
         } catch (IOException ex) {
             throw new NonRetryableException("Error serialising delta", ex);
         }

@@ -1,6 +1,6 @@
 package uk.gov.companieshouse.monitornotification.matcher.service;
 
-import static uk.gov.companieshouse.monitornotification.matcher.Application.NAMESPACE;
+import static uk.gov.companieshouse.monitornotification.matcher.config.ApplicationConfig.NAMESPACE;
 
 import org.springframework.stereotype.Service;
 import uk.gov.companieshouse.delta.ChsDelta;
