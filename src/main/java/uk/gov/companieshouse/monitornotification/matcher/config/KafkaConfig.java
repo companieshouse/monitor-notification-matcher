@@ -1,7 +1,6 @@
 package uk.gov.companieshouse.monitornotification.matcher.config;
 
 import static java.lang.String.format;
-import static uk.gov.companieshouse.monitornotification.matcher.Application.NAMESPACE;
 
 import java.util.Map;
 import org.apache.kafka.clients.consumer.ConsumerConfig;
@@ -27,7 +26,6 @@ import org.springframework.kafka.support.serializer.DelegatingByTypeSerializer;
 import org.springframework.kafka.support.serializer.ErrorHandlingDeserializer;
 import uk.gov.companieshouse.delta.ChsDelta;
 import uk.gov.companieshouse.logging.Logger;
-import uk.gov.companieshouse.logging.LoggerFactory;
 import uk.gov.companieshouse.monitornotification.matcher.exception.RetryableException;
 import uk.gov.companieshouse.monitornotification.matcher.kafka.InvalidMessageRouter;
 import uk.gov.companieshouse.monitornotification.matcher.kafka.MessageFlags;
@@ -38,11 +36,15 @@ import uk.gov.companieshouse.monitornotification.matcher.serdes.ChsDeltaSerialis
 @EnableKafka
 public class KafkaConfig {
 
-    private static final Logger LOGGER = LoggerFactory.getLogger(NAMESPACE);
+    private final Logger logger;
+
+    public KafkaConfig(final Logger logger) {
+        this.logger = logger;
+    }
 
     @Bean
     public ConsumerFactory<String, ChsDelta> consumerFactory(@Value("${spring.kafka.bootstrap-servers}") String bootstrapServers) {
-        LOGGER.trace(format("consumerFactory(bootstrapServers=%s) method called.", bootstrapServers));
+        logger.trace(format("consumerFactory(bootstrapServers=%s) method called.", bootstrapServers));
 
         return new DefaultKafkaConsumerFactory<>(
                 Map.of(
@@ -61,7 +63,7 @@ public class KafkaConfig {
     public ConcurrentKafkaListenerContainerFactory<String, ChsDelta> kafkaListenerContainerFactory(
             @Value("${consumer.concurrency}") Integer concurrency,
             ConsumerFactory<String, ChsDelta> consumerFactory) {
-        LOGGER.trace("kafkaListenerContainerFactory() method called.");
+        logger.trace("kafkaListenerContainerFactory() method called.");
 
         ConcurrentKafkaListenerContainerFactory<String, ChsDelta> factory = new ConcurrentKafkaListenerContainerFactory<>();
         factory.setConsumerFactory(consumerFactory);
@@ -74,8 +76,9 @@ public class KafkaConfig {
     public ProducerFactory<String, Object> producerFactory(MessageFlags messageFlags,
             @Value("${spring.kafka.bootstrap-servers}") String bootstrapServers,
             @Value("${consumer.topic}") String topic,
-            @Value("${consumer.group-id}") String groupId) {
-        LOGGER.trace("producerFactory() method called.");
+            @Value("${consumer.group-id}") String groupId,
+            @Value("${spring.application.name}") String applicationName) {
+        logger.trace("producerFactory() method called.");
 
         return new DefaultKafkaProducerFactory<>(
                 Map.of(
@@ -85,7 +88,8 @@ public class KafkaConfig {
                         ProducerConfig.VALUE_SERIALIZER_CLASS_CONFIG, DelegatingByTypeSerializer.class,
                         ProducerConfig.INTERCEPTOR_CLASSES_CONFIG, InvalidMessageRouter.class.getName(),
                         "message-flags", messageFlags,
-                        "invalid-topic", "%s-%s-invalid".formatted(topic, groupId)),
+                        "invalid-topic", "%s-%s-invalid".formatted(topic, groupId),
+                        "application-name", applicationName),
                 new StringSerializer(),
                 new DelegatingByTypeSerializer(
                         Map.of(
@@ -95,7 +99,7 @@ public class KafkaConfig {
 
     @Bean
     public KafkaTemplate<String, Object> kafkaTemplate(ProducerFactory<String, Object> producerFactory) {
-        LOGGER.trace("kafkaTemplate() method called.");
+        logger.trace("kafkaTemplate() method called.");
 
         return new KafkaTemplate<>(producerFactory);
     }
@@ -105,7 +109,7 @@ public class KafkaConfig {
             @Value("${consumer.group-id}") String groupId,
             @Value("${consumer.max-attempts}") int attempts,
             @Value("${consumer.backoff-delay}") int delay) {
-        LOGGER.trace("retryTopicConfiguration() method called.");
+        logger.trace("retryTopicConfiguration() method called.");
 
         return RetryTopicConfigurationBuilder
                 .newInstance()

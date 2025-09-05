@@ -4,7 +4,7 @@ import static org.springframework.kafka.retrytopic.RetryTopicHeaders.DEFAULT_HEA
 import static org.springframework.kafka.support.KafkaHeaders.OFFSET;
 import static org.springframework.kafka.support.KafkaHeaders.RECEIVED_PARTITION;
 import static org.springframework.kafka.support.KafkaHeaders.RECEIVED_TOPIC;
-import static uk.gov.companieshouse.monitornotification.matcher.Application.NAMESPACE;
+import static uk.gov.companieshouse.monitornotification.matcher.config.ApplicationConfig.NAMESPACE;
 
 import java.nio.ByteBuffer;
 import java.util.Optional;

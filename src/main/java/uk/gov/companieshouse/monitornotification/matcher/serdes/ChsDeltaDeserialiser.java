@@ -1,6 +1,6 @@
 package uk.gov.companieshouse.monitornotification.matcher.serdes;
 
-import static uk.gov.companieshouse.monitornotification.matcher.Application.NAMESPACE;
+import static uk.gov.companieshouse.monitornotification.matcher.config.ApplicationConfig.NAMESPACE;
 
 import java.io.IOException;
 import org.apache.avro.AvroRuntimeException;

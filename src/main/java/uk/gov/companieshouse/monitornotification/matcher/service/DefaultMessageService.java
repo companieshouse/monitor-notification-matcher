@@ -1,11 +1,8 @@
 package uk.gov.companieshouse.monitornotification.matcher.service;
 
-import static uk.gov.companieshouse.monitornotification.matcher.Application.NAMESPACE;
-
 import org.springframework.stereotype.Service;
 import uk.gov.companieshouse.delta.ChsDelta;
 import uk.gov.companieshouse.logging.Logger;
-import uk.gov.companieshouse.logging.LoggerFactory;
 import uk.gov.companieshouse.monitornotification.matcher.kafka.Router;
 
 /**
@@ -15,11 +12,15 @@ import uk.gov.companieshouse.monitornotification.matcher.kafka.Router;
 @Service
 public class DefaultMessageService implements Router {
 
-    private static final Logger LOGGER = LoggerFactory.getLogger(NAMESPACE);
+    private final Logger logger;
+
+    public DefaultMessageService(final Logger logger) {
+        this.logger = logger;
+    }
 
     @Override
     public void route(final ChsDelta delta) {
-        LOGGER.debug(String.format("route(delta=%s) method called.", delta));
+        logger.debug(String.format("route(delta=%s) method called.", delta));
 
         // Message processing goes here.
     }
