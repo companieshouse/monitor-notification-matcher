@@ -1,16 +1,15 @@
 package uk.gov.companieshouse.monitornotification.matcher.config;
-
-import static java.lang.String.format;
-
+import java.util.HashMap;
 import java.util.Map;
+import monitor.transaction;
 import org.apache.kafka.clients.consumer.ConsumerConfig;
 import org.apache.kafka.clients.producer.ProducerConfig;
-import org.apache.kafka.common.serialization.ByteArraySerializer;
 import org.apache.kafka.common.serialization.StringDeserializer;
 import org.apache.kafka.common.serialization.StringSerializer;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
+import org.springframework.context.annotation.Profile;
 import org.springframework.kafka.annotation.EnableKafka;
 import org.springframework.kafka.config.ConcurrentKafkaListenerContainerFactory;
 import org.springframework.kafka.core.ConsumerFactory;
@@ -19,108 +18,90 @@ import org.springframework.kafka.core.DefaultKafkaProducerFactory;
 import org.springframework.kafka.core.KafkaTemplate;
 import org.springframework.kafka.core.ProducerFactory;
 import org.springframework.kafka.listener.ContainerProperties;
-import org.springframework.kafka.retrytopic.DltStrategy;
-import org.springframework.kafka.retrytopic.RetryTopicConfiguration;
-import org.springframework.kafka.retrytopic.RetryTopicConfigurationBuilder;
-import org.springframework.kafka.support.serializer.DelegatingByTypeSerializer;
 import org.springframework.kafka.support.serializer.ErrorHandlingDeserializer;
-import uk.gov.companieshouse.delta.ChsDelta;
 import uk.gov.companieshouse.logging.Logger;
-import uk.gov.companieshouse.monitornotification.matcher.exception.RetryableException;
-import uk.gov.companieshouse.monitornotification.matcher.kafka.InvalidMessageRouter;
-import uk.gov.companieshouse.monitornotification.matcher.kafka.MessageFlags;
-import uk.gov.companieshouse.monitornotification.matcher.serdes.ChsDeltaDeserialiser;
-import uk.gov.companieshouse.monitornotification.matcher.serdes.ChsDeltaSerialiser;
+import uk.gov.companieshouse.monitornotification.matcher.config.properties.MonitorFilingConsumerProperties;
+import uk.gov.companieshouse.monitornotification.matcher.exception.RetryableTopicErrorInterceptor;
+import uk.gov.companieshouse.monitornotification.matcher.serdes.MonitorFilingDeserializer;
+import uk.gov.companieshouse.monitornotification.matcher.serdes.MonitorFilingSerializer;
 
 @Configuration
 @EnableKafka
+@Profile("!test")
 public class KafkaConfig {
 
+    private final MonitorFilingConsumerProperties properties;
+    private final String bootstrapServers;
     private final Logger logger;
 
-    public KafkaConfig(final Logger logger) {
+    /**
+     * Constructor.
+     */
+    public KafkaConfig(MonitorFilingConsumerProperties newProperties,
+            @Value("${spring.kafka.bootstrap-servers}") String bootstrapServers,
+            Logger logger) {
+        this.properties = newProperties;
+        this.bootstrapServers = bootstrapServers;
         this.logger = logger;
     }
 
-    @Bean
-    public ConsumerFactory<String, ChsDelta> consumerFactory(@Value("${spring.kafka.bootstrap-servers}") String bootstrapServers) {
-        logger.trace(format("consumerFactory(bootstrapServers=%s) method called.", bootstrapServers));
+    /**
+     * Kafka MonitorFilingConsumer Factory.
+     */
+    @Bean("kafkaConsumerFactory")
+    public ConsumerFactory<String, transaction> kafkaConsumerFactory() {
+        logger.trace("createKafkaConsumerFactory() method called.");
 
-        return new DefaultKafkaConsumerFactory<>(
-                Map.of(
-                        ConsumerConfig.BOOTSTRAP_SERVERS_CONFIG, bootstrapServers,
-                        ConsumerConfig.KEY_DESERIALIZER_CLASS_CONFIG, ErrorHandlingDeserializer.class,
-                        ConsumerConfig.VALUE_DESERIALIZER_CLASS_CONFIG, ErrorHandlingDeserializer.class,
-                        ErrorHandlingDeserializer.KEY_DESERIALIZER_CLASS, StringDeserializer.class,
-                        ErrorHandlingDeserializer.VALUE_DESERIALIZER_CLASS, ChsDeltaDeserialiser.class,
-                        ConsumerConfig.AUTO_OFFSET_RESET_CONFIG, "earliest",
-                        ConsumerConfig.ENABLE_AUTO_COMMIT_CONFIG, "false"),
-                new StringDeserializer(),
-                new ErrorHandlingDeserializer<>(new ChsDeltaDeserialiser()));
+        Map<String, Object> props = new HashMap<>();
+
+        props.put(ConsumerConfig.BOOTSTRAP_SERVERS_CONFIG, bootstrapServers);
+        props.put(ConsumerConfig.KEY_DESERIALIZER_CLASS_CONFIG, ErrorHandlingDeserializer.class);
+        props.put(ConsumerConfig.VALUE_DESERIALIZER_CLASS_CONFIG, ErrorHandlingDeserializer.class);
+        props.put(ErrorHandlingDeserializer.KEY_DESERIALIZER_CLASS, StringDeserializer.class);
+        props.put(ErrorHandlingDeserializer.VALUE_DESERIALIZER_CLASS, MonitorFilingDeserializer.class);
+        props.put(ConsumerConfig.AUTO_OFFSET_RESET_CONFIG, "earliest");
+        props.put(ConsumerConfig.ENABLE_AUTO_COMMIT_CONFIG, false);
+        props.put(ConsumerConfig.ISOLATION_LEVEL_CONFIG, "read_committed");
+
+        return new DefaultKafkaConsumerFactory<>(props, new StringDeserializer(),
+                new ErrorHandlingDeserializer<>(new MonitorFilingDeserializer()));
     }
 
-    @Bean
-    public ConcurrentKafkaListenerContainerFactory<String, ChsDelta> kafkaListenerContainerFactory(
-            @Value("${consumer.concurrency}") Integer concurrency,
-            ConsumerFactory<String, ChsDelta> consumerFactory) {
+    /**
+     * Kafka Producer Factory.
+     */
+    @Bean("kafkaProducerFactory")
+    public ProducerFactory<String, Object> kafkaProducerFactory() {
+        logger.trace("createKafkaProducerFactory() method called.");
+
+        Map<String, Object> props = new HashMap<>();
+        props.put(ProducerConfig.ENABLE_IDEMPOTENCE_CONFIG, "false");
+        props.put(ProducerConfig.BOOTSTRAP_SERVERS_CONFIG, bootstrapServers);
+        props.put(ProducerConfig.KEY_SERIALIZER_CLASS_CONFIG, StringSerializer.class);
+        props.put(ProducerConfig.VALUE_SERIALIZER_CLASS_CONFIG, MonitorFilingSerializer.class);
+        props.put(ProducerConfig.INTERCEPTOR_CLASSES_CONFIG, RetryableTopicErrorInterceptor.class.getName());
+
+        return new DefaultKafkaProducerFactory<>(props, new StringSerializer(), new MonitorFilingSerializer());
+    }
+
+    @Bean("kafkaTemplate")
+    public KafkaTemplate<String, Object> kafkaTemplate() {
+        return new KafkaTemplate<>(kafkaProducerFactory());
+    }
+
+    /**
+     * Kafka Listener Container Factory.
+     */
+    @Bean("kafkaListenerContainerFactory")
+    public ConcurrentKafkaListenerContainerFactory<String, transaction> kafkaListenerContainerFactory() {
         logger.trace("kafkaListenerContainerFactory() method called.");
 
-        ConcurrentKafkaListenerContainerFactory<String, ChsDelta> factory = new ConcurrentKafkaListenerContainerFactory<>();
-        factory.setConsumerFactory(consumerFactory);
-        factory.setConcurrency(concurrency);
+        ConcurrentKafkaListenerContainerFactory<String, transaction> factory = new ConcurrentKafkaListenerContainerFactory<>();
+        factory.setConsumerFactory(kafkaConsumerFactory());
+        factory.setConcurrency(properties.getConcurrency());
         factory.getContainerProperties().setAckMode(ContainerProperties.AckMode.RECORD);
+
         return factory;
     }
 
-    @Bean
-    public ProducerFactory<String, Object> producerFactory(MessageFlags messageFlags,
-            @Value("${spring.kafka.bootstrap-servers}") String bootstrapServers,
-            @Value("${consumer.topic}") String topic,
-            @Value("${consumer.group-id}") String groupId,
-            @Value("${spring.application.name}") String applicationName) {
-        logger.trace("producerFactory() method called.");
-
-        return new DefaultKafkaProducerFactory<>(
-                Map.of(
-                        ProducerConfig.BOOTSTRAP_SERVERS_CONFIG, bootstrapServers,
-                        ProducerConfig.ACKS_CONFIG, "all",
-                        ProducerConfig.KEY_SERIALIZER_CLASS_CONFIG, StringSerializer.class,
-                        ProducerConfig.VALUE_SERIALIZER_CLASS_CONFIG, DelegatingByTypeSerializer.class,
-                        ProducerConfig.INTERCEPTOR_CLASSES_CONFIG, InvalidMessageRouter.class.getName(),
-                        "message-flags", messageFlags,
-                        "invalid-topic", "%s-%s-invalid".formatted(topic, groupId),
-                        "application-name", applicationName),
-                new StringSerializer(),
-                new DelegatingByTypeSerializer(
-                        Map.of(
-                                byte[].class, new ByteArraySerializer(),
-                                ChsDelta.class, new ChsDeltaSerialiser())));
-    }
-
-    @Bean
-    public KafkaTemplate<String, Object> kafkaTemplate(ProducerFactory<String, Object> producerFactory) {
-        logger.trace("kafkaTemplate() method called.");
-
-        return new KafkaTemplate<>(producerFactory);
-    }
-
-    @Bean
-    public RetryTopicConfiguration retryTopicConfiguration(KafkaTemplate<String, Object> template,
-            @Value("${consumer.group-id}") String groupId,
-            @Value("${consumer.max-attempts}") int attempts,
-            @Value("${consumer.backoff-delay}") int delay) {
-        logger.trace("retryTopicConfiguration() method called.");
-
-        return RetryTopicConfigurationBuilder
-                .newInstance()
-                .doNotAutoCreateRetryTopics() // this is necessary to prevent failing connection during loading of spring app context
-                .maxAttempts(attempts)
-                .fixedBackOff(delay)
-                .useSingleTopicForSameIntervals()
-                .retryTopicSuffix("-%s-retry".formatted(groupId))
-                .dltSuffix("-%s-error".formatted(groupId))
-                .dltProcessingFailureStrategy(DltStrategy.FAIL_ON_ERROR)
-                .retryOn(RetryableException.class)
-                .create(template);
-    }
 }
