@@ -22,8 +22,8 @@ import org.springframework.kafka.support.serializer.ErrorHandlingDeserializer;
 import uk.gov.companieshouse.logging.Logger;
 import uk.gov.companieshouse.monitornotification.matcher.config.properties.MonitorFilingConsumerProperties;
 import uk.gov.companieshouse.monitornotification.matcher.exception.RetryableTopicErrorInterceptor;
+import uk.gov.companieshouse.monitornotification.matcher.serdes.GenericSerializer;
 import uk.gov.companieshouse.monitornotification.matcher.serdes.MonitorFilingDeserializer;
-import uk.gov.companieshouse.monitornotification.matcher.serdes.MonitorFilingSerializer;
 
 @Configuration
 @EnableKafka
@@ -78,10 +78,10 @@ public class KafkaConfig {
         props.put(ProducerConfig.ENABLE_IDEMPOTENCE_CONFIG, "false");
         props.put(ProducerConfig.BOOTSTRAP_SERVERS_CONFIG, bootstrapServers);
         props.put(ProducerConfig.KEY_SERIALIZER_CLASS_CONFIG, StringSerializer.class);
-        props.put(ProducerConfig.VALUE_SERIALIZER_CLASS_CONFIG, MonitorFilingSerializer.class);
+        props.put(ProducerConfig.VALUE_SERIALIZER_CLASS_CONFIG, GenericSerializer.class);
         props.put(ProducerConfig.INTERCEPTOR_CLASSES_CONFIG, RetryableTopicErrorInterceptor.class.getName());
 
-        return new DefaultKafkaProducerFactory<>(props, new StringSerializer(), new MonitorFilingSerializer());
+        return new DefaultKafkaProducerFactory<>(props, new StringSerializer(), new GenericSerializer());
     }
 
     @Bean("kafkaTemplate")
