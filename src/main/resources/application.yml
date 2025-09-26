@@ -4,19 +4,14 @@ spring:
     name: monitor-notification-matcher
 
   kafka:
-    bootstrap-servers: ${KAFKA_BROKER_ADDR:localhost:9092}
+    bootstrap-servers: ${KAFKA_BROKER_ADDR:kafka3:9092}
     consumer:
-      filing:
+      notify:
         topic: ${NOTIFICATION_MATCH_TOPIC:notification-match}
         group-id: ${CONSUMER_GROUP_NAME:notification-match-consumer-group}
         max-attempts: ${MAX_ATTEMPTS:5}
         backoff-delay: ${BACKOFF_DELAY:1000}
         concurrency: ${CONCURRENT_LISTENER_INSTANCES:1}
-
-  data:
-    mongodb:
-      uri: ${MONGODB_URL:mongodb://mongo:27017}
-      database: ${MONGO_DATABASE:monitor}
 
 management:
   endpoints:

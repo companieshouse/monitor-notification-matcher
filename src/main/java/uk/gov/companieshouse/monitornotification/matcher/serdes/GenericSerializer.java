@@ -6,7 +6,6 @@ import static uk.gov.companieshouse.monitornotification.matcher.config.Applicati
 import consumer.exception.NonRetryableErrorException;
 import java.nio.charset.StandardCharsets;
 import monitor.filing;
-import monitor.transaction;
 import org.apache.avro.io.DatumWriter;
 import org.apache.avro.io.EncoderFactory;
 import org.apache.avro.specific.SpecificDatumWriter;
@@ -27,14 +26,6 @@ public class GenericSerializer implements Serializer<Object> {
         try {
             if (payload instanceof byte[]) {
                 return (byte[]) payload;
-            }
-
-            if (payload instanceof transaction monitorFiling) {
-                DatumWriter<transaction> writer = new SpecificDatumWriter<>();
-                var encoderFactory = EncoderFactory.get();
-
-                AvroSerializer<transaction> avroSerializer = new AvroSerializer<>(writer, encoderFactory);
-                return avroSerializer.toBinary(monitorFiling);
             }
 
             if (payload instanceof filing notificationMatch) {

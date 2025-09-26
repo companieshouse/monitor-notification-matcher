@@ -3,9 +3,9 @@ package uk.gov.companieshouse.monitornotification.matcher.config.properties;
 import org.springframework.boot.context.properties.ConfigurationProperties;
 import org.springframework.stereotype.Component;
 
-@ConfigurationProperties(prefix = "spring.kafka.consumer.filing")
+@ConfigurationProperties(prefix = "spring.kafka.consumer.notify")
 @Component
-public class MonitorFilingConsumerProperties {
+public class NotificationMatchConsumerProperties {
 
     private String topic;
     private String groupId;

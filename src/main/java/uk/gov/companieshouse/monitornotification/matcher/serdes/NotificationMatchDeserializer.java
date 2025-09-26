@@ -4,7 +4,7 @@ import static uk.gov.companieshouse.monitornotification.matcher.config.Applicati
 
 import consumer.exception.NonRetryableErrorException;
 import java.io.IOException;
-import monitor.transaction;
+import monitor.filing;
 import org.apache.avro.AvroRuntimeException;
 import org.apache.avro.io.DatumReader;
 import org.apache.avro.io.Decoder;
@@ -15,18 +15,18 @@ import uk.gov.companieshouse.logging.Logger;
 import uk.gov.companieshouse.logging.LoggerFactory;
 import uk.gov.companieshouse.monitornotification.matcher.logging.DataMapHolder;
 
-public class MonitorFilingDeserializer implements Deserializer<transaction> {
+public class NotificationMatchDeserializer implements Deserializer<filing> {
 
     private static final Logger LOGGER = LoggerFactory.getLogger(NAMESPACE);
 
     @Override
-    public transaction deserialize(String topic, byte[] data) {
+    public filing deserialize(String topic, byte[] data) {
         LOGGER.trace("deserialize() -> [Topic: %s, Data: %d bytes]".formatted(topic, data.length));
 
         try {
             Decoder decoder = DecoderFactory.get().binaryDecoder(data, null);
-            DatumReader<transaction> reader = new ReflectDatumReader<>(transaction.class);
-            transaction record = reader.read(null, decoder);
+            DatumReader<filing> reader = new ReflectDatumReader<>(filing.class);
+            filing record = reader.read(null, decoder);
 
             LOGGER.info("Message successfully de-serialised", DataMapHolder.getLogMap());
 

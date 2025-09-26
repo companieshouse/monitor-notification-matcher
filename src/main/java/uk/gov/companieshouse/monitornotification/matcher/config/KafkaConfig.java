@@ -1,7 +1,8 @@
 package uk.gov.companieshouse.monitornotification.matcher.config;
+
 import java.util.HashMap;
 import java.util.Map;
-import monitor.transaction;
+import monitor.filing;
 import org.apache.kafka.clients.consumer.ConsumerConfig;
 import org.apache.kafka.clients.producer.ProducerConfig;
 import org.apache.kafka.common.serialization.StringDeserializer;
@@ -20,24 +21,24 @@ import org.springframework.kafka.core.ProducerFactory;
 import org.springframework.kafka.listener.ContainerProperties;
 import org.springframework.kafka.support.serializer.ErrorHandlingDeserializer;
 import uk.gov.companieshouse.logging.Logger;
-import uk.gov.companieshouse.monitornotification.matcher.config.properties.MonitorFilingConsumerProperties;
+import uk.gov.companieshouse.monitornotification.matcher.config.properties.NotificationMatchConsumerProperties;
 import uk.gov.companieshouse.monitornotification.matcher.exception.RetryableTopicErrorInterceptor;
 import uk.gov.companieshouse.monitornotification.matcher.serdes.GenericSerializer;
-import uk.gov.companieshouse.monitornotification.matcher.serdes.MonitorFilingDeserializer;
+import uk.gov.companieshouse.monitornotification.matcher.serdes.NotificationMatchDeserializer;
 
 @Configuration
 @EnableKafka
 @Profile("!test")
 public class KafkaConfig {
 
-    private final MonitorFilingConsumerProperties properties;
+    private final NotificationMatchConsumerProperties properties;
     private final String bootstrapServers;
     private final Logger logger;
 
     /**
      * Constructor.
      */
-    public KafkaConfig(MonitorFilingConsumerProperties newProperties,
+    public KafkaConfig(NotificationMatchConsumerProperties newProperties,
             @Value("${spring.kafka.bootstrap-servers}") String bootstrapServers,
             Logger logger) {
         this.properties = newProperties;
@@ -46,10 +47,10 @@ public class KafkaConfig {
     }
 
     /**
-     * Kafka MonitorFilingConsumer Factory.
+     * Kafka NotificationMatchConsumer Factory.
      */
     @Bean("kafkaConsumerFactory")
-    public ConsumerFactory<String, transaction> kafkaConsumerFactory() {
+    public ConsumerFactory<String, filing> kafkaConsumerFactory() {
         logger.trace("createKafkaConsumerFactory() method called.");
 
         Map<String, Object> props = new HashMap<>();
@@ -58,13 +59,13 @@ public class KafkaConfig {
         props.put(ConsumerConfig.KEY_DESERIALIZER_CLASS_CONFIG, ErrorHandlingDeserializer.class);
         props.put(ConsumerConfig.VALUE_DESERIALIZER_CLASS_CONFIG, ErrorHandlingDeserializer.class);
         props.put(ErrorHandlingDeserializer.KEY_DESERIALIZER_CLASS, StringDeserializer.class);
-        props.put(ErrorHandlingDeserializer.VALUE_DESERIALIZER_CLASS, MonitorFilingDeserializer.class);
+        props.put(ErrorHandlingDeserializer.VALUE_DESERIALIZER_CLASS, NotificationMatchDeserializer.class);
         props.put(ConsumerConfig.AUTO_OFFSET_RESET_CONFIG, "earliest");
         props.put(ConsumerConfig.ENABLE_AUTO_COMMIT_CONFIG, false);
         props.put(ConsumerConfig.ISOLATION_LEVEL_CONFIG, "read_committed");
 
         return new DefaultKafkaConsumerFactory<>(props, new StringDeserializer(),
-                new ErrorHandlingDeserializer<>(new MonitorFilingDeserializer()));
+                new ErrorHandlingDeserializer<>(new NotificationMatchDeserializer()));
     }
 
     /**
@@ -93,10 +94,10 @@ public class KafkaConfig {
      * Kafka Listener Container Factory.
      */
     @Bean("kafkaListenerContainerFactory")
-    public ConcurrentKafkaListenerContainerFactory<String, transaction> kafkaListenerContainerFactory() {
+    public ConcurrentKafkaListenerContainerFactory<String, filing> kafkaListenerContainerFactory() {
         logger.trace("kafkaListenerContainerFactory() method called.");
 
-        ConcurrentKafkaListenerContainerFactory<String, transaction> factory = new ConcurrentKafkaListenerContainerFactory<>();
+        ConcurrentKafkaListenerContainerFactory<String, filing> factory = new ConcurrentKafkaListenerContainerFactory<>();
         factory.setConsumerFactory(kafkaConsumerFactory());
         factory.setConcurrency(properties.getConcurrency());
         factory.getContainerProperties().setAckMode(ContainerProperties.AckMode.RECORD);

@@ -1,11 +1,10 @@
 package uk.gov.companieshouse.monitornotification.matcher.config;
 
-
 import static org.hamcrest.MatcherAssert.assertThat;
 import static org.hamcrest.Matchers.is;
 import static org.hamcrest.Matchers.notNullValue;
 
-import monitor.transaction;
+import monitor.filing;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
@@ -15,46 +14,38 @@ import org.springframework.kafka.core.ConsumerFactory;
 import org.springframework.kafka.core.KafkaTemplate;
 import uk.gov.companieshouse.logging.Logger;
 import uk.gov.companieshouse.logging.LoggerFactory;
-import uk.gov.companieshouse.monitornotification.matcher.config.properties.MonitorFilingConsumerProperties;
-import uk.gov.companieshouse.monitornotification.matcher.config.properties.NotificationMatchProducerProperties;
+import uk.gov.companieshouse.monitornotification.matcher.config.properties.NotificationMatchConsumerProperties;
 
 @ExtendWith(MockitoExtension.class)
 public class KafkaConfigTest {
 
-    private MonitorFilingConsumerProperties monitorFilingProperties;
-    private NotificationMatchProducerProperties notificationMatchProperties;
+    private NotificationMatchConsumerProperties notificationMatchProperties;
     private KafkaConfig underTest;
 
     @BeforeEach
     public void setUp() {
-        monitorFilingProperties = new MonitorFilingConsumerProperties();
-        monitorFilingProperties.setTopic("test-topic");
-        monitorFilingProperties.setGroupId("test-group");
-        monitorFilingProperties.setConcurrency(1);
-        monitorFilingProperties.setMaxAttempts(3);
-        monitorFilingProperties.setBackOffDelay(1000L);
-
-        notificationMatchProperties = new NotificationMatchProducerProperties();
-        notificationMatchProperties.setTopic("producer-topic");
+        notificationMatchProperties = new NotificationMatchConsumerProperties();
+        notificationMatchProperties.setTopic("test-topic");
+        notificationMatchProperties.setGroupId("test-group");
+        notificationMatchProperties.setConcurrency(1);
+        notificationMatchProperties.setMaxAttempts(3);
+        notificationMatchProperties.setBackOffDelay(1000L);
 
         String bootstrapServers = "localhost:9092";
         Logger logger = LoggerFactory.getLogger("test-logger");
 
-        underTest = new KafkaConfig(monitorFilingProperties, bootstrapServers, logger);
+        underTest = new KafkaConfig(notificationMatchProperties, bootstrapServers, logger);
     }
 
     @Test
     public void givenKafkaConfigProperties_whenLoaded_thenValuesAreSet() {
-        assertThat(monitorFilingProperties, is(notNullValue()));
         assertThat(notificationMatchProperties, is(notNullValue()));
 
-        assertThat(monitorFilingProperties.getTopic(), is("test-topic"));
-        assertThat(monitorFilingProperties.getGroupId(), is("test-group"));
-        assertThat(monitorFilingProperties.getConcurrency(), is(1));
-        assertThat(monitorFilingProperties.getMaxAttempts(), is(3));
-        assertThat(monitorFilingProperties.getBackOffDelay(), is(1000L));
-
-        assertThat(notificationMatchProperties.getTopic(), is("producer-topic"));
+        assertThat(notificationMatchProperties.getTopic(), is("test-topic"));
+        assertThat(notificationMatchProperties.getGroupId(), is("test-group"));
+        assertThat(notificationMatchProperties.getConcurrency(), is(1));
+        assertThat(notificationMatchProperties.getMaxAttempts(), is(3));
+        assertThat(notificationMatchProperties.getBackOffDelay(), is(1000L));
     }
 
     @Test
@@ -66,16 +57,15 @@ public class KafkaConfigTest {
 
     @Test
     public void givenConfigProvider_whenKafkaConsumerFactoryCreated_thenNoErrorsAreRaised() {
-        ConsumerFactory<String, transaction> result = underTest.kafkaConsumerFactory();
+        ConsumerFactory<String, filing> result = underTest.kafkaConsumerFactory();
 
         assertThat(result, is(notNullValue()));
     }
 
     @Test
     public void givenConfigProvider_whenKafkaListenerContainerFactoryCreated_thenNoErrorsAreRaised() {
-        ConcurrentKafkaListenerContainerFactory<String, transaction> result = underTest.kafkaListenerContainerFactory();
+        ConcurrentKafkaListenerContainerFactory<String, filing> result = underTest.kafkaListenerContainerFactory();
 
         assertThat(result, is(notNullValue()));
     }
 }
-
