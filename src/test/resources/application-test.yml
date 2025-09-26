@@ -4,16 +4,23 @@ spring:
     name: monitor-notification-matcher
 
   kafka:
-    bootstrap-servers: kafka3:9092
+    bootstrap-servers: localhost:9092
+    producer:
+      value-serializer: uk.gov.companieshouse.monitornotification.matcher.serdes.GenericSerializer
     consumer:
       value-deserializer: uk.gov.companieshouse.monitornotification.matcher.serdes.NotificationMatchDeserializer
       auto-offset-reset: earliest
-      notify:
+      filing:
         topic: test-topic
         group-id: test-group-id
         max-attempts: 5
         backoff-delay: 1000
         concurrency: 1
+
+  data:
+    mongodb:
+      uri: mongodb://localhost:27017
+      database: monitor
 
 server:
   port: 9191
