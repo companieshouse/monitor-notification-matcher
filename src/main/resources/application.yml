@@ -1,0 +1,27 @@
+spring:
+
+  application:
+    name: monitor-notification-matcher
+
+  kafka:
+    bootstrap-servers: ${KAFKA_BROKER_ADDR:kafka3:9092}
+    consumer:
+      notify:
+        topic: ${NOTIFICATION_MATCH_TOPIC:notification-match}
+        group-id: ${CONSUMER_GROUP_NAME:notification-match-consumer-group}
+        max-attempts: ${MAX_ATTEMPTS:5}
+        backoff-delay: ${BACKOFF_DELAY:1000}
+        concurrency: ${CONCURRENT_LISTENER_INSTANCES:1}
+
+management:
+  endpoints:
+    web.exposure.include: health
+  endpoint:
+    health.show-details: always
+  health:
+    defaults.enabled: true
+  server:
+    port: 8082
+
+server:
+  port: ${PORT:8181}

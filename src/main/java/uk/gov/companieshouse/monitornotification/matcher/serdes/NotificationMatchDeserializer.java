@@ -2,33 +2,40 @@ package uk.gov.companieshouse.monitornotification.matcher.serdes;
 
 import static uk.gov.companieshouse.monitornotification.matcher.config.ApplicationConfig.NAMESPACE;
 
+import consumer.exception.NonRetryableErrorException;
 import java.io.IOException;
+import monitor.filing;
 import org.apache.avro.AvroRuntimeException;
 import org.apache.avro.io.DatumReader;
 import org.apache.avro.io.Decoder;
 import org.apache.avro.io.DecoderFactory;
 import org.apache.avro.reflect.ReflectDatumReader;
 import org.apache.kafka.common.serialization.Deserializer;
-import uk.gov.companieshouse.delta.ChsDelta;
 import uk.gov.companieshouse.logging.Logger;
 import uk.gov.companieshouse.logging.LoggerFactory;
-import uk.gov.companieshouse.monitornotification.matcher.exception.InvalidPayloadException;
 import uk.gov.companieshouse.monitornotification.matcher.logging.DataMapHolder;
 
-public class ChsDeltaDeserialiser implements Deserializer<ChsDelta> {
+public class NotificationMatchDeserializer implements Deserializer<filing> {
 
     private static final Logger LOGGER = LoggerFactory.getLogger(NAMESPACE);
 
     @Override
-    public ChsDelta deserialize(String topic, byte[] data) {
+    public filing deserialize(String topic, byte[] data) {
+        LOGGER.trace("deserialize() -> [Topic: %s, Data: %d bytes]".formatted(topic, data.length));
+
         try {
             Decoder decoder = DecoderFactory.get().binaryDecoder(data, null);
-            DatumReader<ChsDelta> reader = new ReflectDatumReader<>(ChsDelta.class);
-            return reader.read(null, decoder);
+            DatumReader<filing> reader = new ReflectDatumReader<>(filing.class);
+            filing record = reader.read(null, decoder);
+
+            LOGGER.info("Message successfully de-serialised", DataMapHolder.getLogMap());
+
+            return record;
+
         } catch (IOException | AvroRuntimeException ex) {
-            String payload = new String(data);
-            LOGGER.error("Error deserialising message payload: [%s]".formatted(payload), ex, DataMapHolder.getLogMap());
-            throw new InvalidPayloadException("Invalid payload: [%s]".formatted(payload), ex);
+            LOGGER.error("De-Serialization exception while converting to Avro schema object", ex, DataMapHolder.getLogMap());
+            throw new NonRetryableErrorException("De-Serialization exception while converting to Avro schema object", ex);
         }
     }
 }
+

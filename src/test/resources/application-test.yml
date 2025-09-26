@@ -1,0 +1,19 @@
+spring:
+
+  application:
+    name: monitor-notification-matcher
+
+  kafka:
+    bootstrap-servers: kafka3:9092
+    consumer:
+      value-deserializer: uk.gov.companieshouse.monitornotification.matcher.serdes.NotificationMatchDeserializer
+      auto-offset-reset: earliest
+      notify:
+        topic: test-topic
+        group-id: test-group-id
+        max-attempts: 5
+        backoff-delay: 1000
+        concurrency: 1
+
+server:
+  port: 9191
