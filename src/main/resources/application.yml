@@ -13,6 +13,11 @@ spring:
         backoff-delay: ${BACKOFF_DELAY:1000}
         concurrency: ${CONCURRENT_LISTENER_INSTANCES:1}
 
+  external:
+    links:
+      chs-url: ${CHS_URL:http://chs.local}
+      monitor-url: ${CHS_MONITOR_GUI_URL:http://follow.chs.local}
+
 management:
   endpoints:
     web.exposure.include: health

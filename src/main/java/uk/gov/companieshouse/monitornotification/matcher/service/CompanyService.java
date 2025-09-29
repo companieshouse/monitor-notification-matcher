@@ -1,6 +1,5 @@
 package uk.gov.companieshouse.monitornotification.matcher.service;
 
-import org.springframework.stereotype.Component;
 import org.springframework.stereotype.Service;
 import uk.gov.companieshouse.logging.Logger;
 
@@ -13,7 +12,9 @@ public class CompanyService {
         this.logger = logger;
     }
 
-    public String findCompanyNameById(final String companyId) {
-        return "My Company Ltd";
+    public String findCompanyDetails(final String companyId) {
+        logger.trace("findCompanyDetails(id=%s) method called.".formatted(companyId));
+
+        return "My Company: %s".formatted(companyId);
     }
 }
