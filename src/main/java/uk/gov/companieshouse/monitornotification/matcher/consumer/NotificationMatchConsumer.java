@@ -41,16 +41,16 @@ public class NotificationMatchConsumer {
      * @param message A message containing a payload.
      */
     @KafkaListener(
-            id = "${spring.kafka.consumer.filing.group-id}",
+            id = "${spring.kafka.consumer.notify.group-id}",
             containerFactory = "kafkaListenerContainerFactory",
-            topics = "${spring.kafka.consumer.filing.topic}",
-            groupId = "${spring.kafka.consumer.filing.group-id}",
+            topics = "${spring.kafka.consumer.notify.topic}",
+            groupId = "${spring.kafka.consumer.notify.group-id}",
             autoStartup = "true"
     )
     @RetryableTopic(
-            attempts = "${spring.kafka.consumer.filing.max-attempts}",
+            attempts = "${spring.kafka.consumer.notify.max-attempts}",
             autoCreateTopics = "false",
-            backoff = @Backoff(delayExpression = "${spring.kafka.consumer.filing.backoff-delay}"),
+            backoff = @Backoff(delayExpression = "${spring.kafka.consumer.notify.backoff-delay}"),
             dltTopicSuffix = "-error",
             dltStrategy = DltStrategy.FAIL_ON_ERROR,
             sameIntervalTopicReuseStrategy = SameIntervalTopicReuseStrategy.SINGLE_TOPIC,

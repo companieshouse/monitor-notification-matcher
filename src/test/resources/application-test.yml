@@ -10,17 +10,12 @@ spring:
     consumer:
       value-deserializer: uk.gov.companieshouse.monitornotification.matcher.serdes.NotificationMatchDeserializer
       auto-offset-reset: earliest
-      filing:
+      notify:
         topic: test-topic
         group-id: test-group-id
         max-attempts: 5
         backoff-delay: 1000
         concurrency: 1
-
-  data:
-    mongodb:
-      uri: mongodb://localhost:27017
-      database: monitor
 
 server:
   port: 9191
