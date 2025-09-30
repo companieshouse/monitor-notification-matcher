@@ -1,6 +1,46 @@
 Monitor Notification Matcher
 =====================
 
+> Part of Monitor/Follow system.
+
+### Service Overview
+- Consumes messages from the `notification-match` Kafka topic.
+
+### Incoming Messages (Consumed)
+- *Incoming messages are consumed from a Kafka Topic named*: `notification-match`
+  - Headers:
+    - `correlation_id`: UUIDv4 string
+    - `reply_to`: Kafka topic name to send response to
+  - Body:
+    ```json
+    {
+    "data": {
+        "app_id": "chs-monitor-notification-matcher.filing",
+        "company_number": "00006400",
+        "data": {
+        "type": "AP01",
+        "description" : "appoint-person-director-company-with-name-date",
+        "description_values" : {
+            "appointment_date" : "1 December 2024",
+            "officer_name" : "DR AMIDAT DUPE IYIOLA"
+        },
+        "links" : {
+            "self" : "/transactions/158153-915517-386847/officers/67a2396e8e70c90c76a3ba62"
+        },
+        "category": "officers",
+        "paper_filed": false,
+        "subcategory": "appointments",
+        "action_date": "2025-02-04",
+        "date": "2025-02-04"
+        },
+        "is_delete": false
+    },
+    "kind": "email",
+    "notified_at": "1453896192000",
+    "user_id": "1vKD26OwehmZI6MpGz9D02-dmCI"
+    }
+    ```
+
 ## Terraform ECS
 
 ### What does this code do?
