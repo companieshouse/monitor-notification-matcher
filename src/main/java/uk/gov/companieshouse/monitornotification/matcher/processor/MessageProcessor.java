@@ -25,7 +25,7 @@ public class MessageProcessor {
     private final CompanyService companyService;
     private final ObjectMapper objectMapper;
     private final Logger logger;
-    private final ExternalLinksProperties properties
+    private final ExternalLinksProperties properties;
 
     public MessageProcessor(final EmailService emailService, final CompanyService companyService,
             final ObjectMapper objectMapper, final Logger logger, final ExternalLinksProperties properties) {
@@ -108,7 +108,7 @@ public class MessageProcessor {
         dataMap.put("subject", format("Company number %s %s", companyNumber, companyName));
 
         return EmailDocument.<Map<String, Object>>builder()
-                .withAppId("chs-monitor-notification-matcher.filing")
+                .withAppId("monitor-notification-matcher.filing")
                 .withMessageId(UUID.randomUUID().toString())
                 .withMessageType("monitor_email")
                 .withCreatedAt(message.getNotifiedAt())
