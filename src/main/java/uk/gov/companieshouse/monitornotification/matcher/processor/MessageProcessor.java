@@ -12,6 +12,7 @@ import java.util.TreeMap;
 import java.util.UUID;
 import monitor.filing;
 import org.springframework.stereotype.Component;
+import uk.gov.companieshouse.api.company.CompanyDetails;
 import uk.gov.companieshouse.logging.Logger;
 import uk.gov.companieshouse.monitornotification.matcher.config.properties.ExternalLinksProperties;
 import uk.gov.companieshouse.monitornotification.matcher.model.EmailDocument;
@@ -41,19 +42,29 @@ public class MessageProcessor {
 
         // Extract the Company ID from the message supplied.
         Optional<String> companyNumber = getCompanyNumber(message);
-
         if (companyNumber.isEmpty()) {
             logger.info("No company number was detected within the notification match payload. Unable to continue.");
             return;
         }
 
         // Lookup the Company Details using the Company ID extracted.
-        String companyName = companyService.findCompanyDetails(companyNumber.get());
-        logger.debug("Company details found: %s".formatted(companyName));
+        Optional<CompanyDetails> companyDetails = companyService.findCompanyDetails(companyNumber.get());
+        if (companyDetails.isEmpty()) {
+            logger.info("No company details were found with company number: [%s]. Unable to continue.".formatted(companyNumber.get()));
+            return;
+        }
 
-        // Send the email using the payload and company details.
-        EmailDocument<?> emailDocument = createEmailDocument(message, companyName, companyNumber.get());
+        logger.debug("Company details found: %s".formatted(companyDetails.get()));
+
+        // Prepare the email document using the payload and company details.
+        EmailDocument<?> emailDocument = createEmailDocument(message, companyDetails.get());
+
+        // Save the email request (document) to the repository.
+        emailService.saveMatch(emailDocument);
+
+        // Send the email document to the email service for processing.
         emailService.sendEmail(emailDocument);
+
     }
 
     private Optional<String> getCompanyNumber(final filing message) {
@@ -94,25 +105,24 @@ public class MessageProcessor {
         }
     }
 
-    private EmailDocument<?> createEmailDocument(final filing message, final String companyName, final String companyNumber) {
-        logger.trace("createEmailDocument(message=%s, companyName=%s, companyNumber=%s) method called."
-                .formatted(message, companyName, companyNumber));
+    private EmailDocument<?> createEmailDocument(final filing message, final CompanyDetails details) {
+        logger.trace("createEmailDocument(message=%s, details=%s) method called.".formatted(message, details));
 
         Map<String, Object> dataMap = new TreeMap<>();
-        dataMap.put("CompanyName", companyName);
-        dataMap.put("CompanyNumber", companyNumber);
+        dataMap.put("CompanyName", details.getCompanyName());
+        dataMap.put("CompanyNumber", details.getCompanyNumber());
         dataMap.put("IsDelete", isDeleteRequest(message));
         dataMap.put("MonitorURL", properties.getMonitorUrl());
         dataMap.put("ChsURL", properties.getChsUrl());
         dataMap.put("from", "Companies House <noreply@companieshouse.gov.uk>");
-        dataMap.put("subject", format("Company number %s %s", companyNumber, companyName));
+        dataMap.put("subject", format("Company number %s %s", details.getCompanyNumber(), details.getCompanyName()));
 
         return EmailDocument.<Map<String, Object>>builder()
                 .withAppId("monitor-notification-matcher.filing")
                 .withMessageId(UUID.randomUUID().toString())
                 .withMessageType("monitor_email")
                 .withCreatedAt(message.getNotifiedAt())
-                .withRecipientEmailAddress("")
+                .withRecipientEmailAddress(null)
                 .withData(dataMap)
                 .build();
     }

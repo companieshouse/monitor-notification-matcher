@@ -1,9 +1,9 @@
 package uk.gov.companieshouse.monitornotification.matcher.util;
 
-import consumer.serialization.AvroSerializer;
 import monitor.filing;
 import org.springframework.messaging.Message;
 import org.springframework.messaging.support.MessageBuilder;
+import uk.gov.companieshouse.monitornotification.matcher.serdes.GenericSerializer;
 
 public class NotificationMatchTestUtils {
 
@@ -87,7 +87,6 @@ public class NotificationMatchTestUtils {
     }
 
     public static byte[] buildFilingRawAvroMessage() {
-        return new AvroSerializer().serialize("test-topic", buildFilingUpdateMessage().getPayload());
+        return new GenericSerializer().serialize("test-topic", buildFilingUpdateMessage().getPayload());
     }
-
 }

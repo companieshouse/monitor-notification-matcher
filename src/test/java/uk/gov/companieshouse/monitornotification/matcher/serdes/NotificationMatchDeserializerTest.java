@@ -10,7 +10,6 @@ import static uk.gov.companieshouse.monitornotification.matcher.util.Notificatio
 import static uk.gov.companieshouse.monitornotification.matcher.util.NotificationMatchTestUtils.buildFilingRawAvroMessage;
 
 import consumer.exception.NonRetryableErrorException;
-import java.io.IOException;
 import java.nio.charset.StandardCharsets;
 import monitor.filing;
 import org.junit.jupiter.api.BeforeEach;
@@ -29,7 +28,7 @@ public class NotificationMatchDeserializerTest {
     }
 
     @Test
-    public void givenValidPayload_whenDeserialized_thenSuccessReturned() throws IOException {
+    public void givenValidPayload_whenDeserialized_thenSuccessReturned() {
         byte[] payload = buildFilingRawAvroMessage();
 
         filing result = underTest.deserialize("test-topic", payload);

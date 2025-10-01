@@ -19,8 +19,8 @@ public class EmailService {
         this.logger = logger;
     }
 
-    public void saveMatch() {
-        logger.trace("saveMatch() method called.");
+    public void saveMatch(final EmailDocument<?> document) {
+        logger.trace("saveMatch(document=%s) method called.".formatted(document));
     }
 
     public void sendEmail(final EmailDocument<?> document) {
@@ -29,7 +29,7 @@ public class EmailService {
             var jsonData = mapper.writeValueAsString(document.getData());
 
             email_send email = new email_send();
-            email.setAppId("chs-monitor-notification-matcher.filing");
+            email.setAppId(document.getAppId());
             email.setMessageId(document.getMessageId());
             email.setMessageType(document.getMessageType());
             email.setEmailAddress(document.getEmailAddress());
