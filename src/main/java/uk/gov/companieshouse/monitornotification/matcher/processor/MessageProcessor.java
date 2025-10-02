@@ -61,7 +61,7 @@ public class MessageProcessor {
         EmailDocument<?> emailDocument = createEmailDocument(message, companyDetails.get());
 
         // Save the email request (document) to the repository.
-        emailService.saveMatch(emailDocument);
+        emailService.saveMatch(emailDocument, message.getUserId());
 
         // Send the email document to the email service for processing.
         emailService.sendEmail(emailDocument);
