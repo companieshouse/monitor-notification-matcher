@@ -24,6 +24,7 @@ import org.mockito.junit.jupiter.MockitoExtension;
 import uk.gov.companieshouse.logging.Logger;
 import uk.gov.companieshouse.monitornotification.matcher.exception.NonRetryableException;
 import uk.gov.companieshouse.monitornotification.matcher.model.EmailDocument;
+import uk.gov.companieshouse.monitornotification.matcher.repository.MonitorMatchesRepository;
 
 @ExtendWith(MockitoExtension.class)
 public class EmailServiceTest {
@@ -34,11 +35,14 @@ public class EmailServiceTest {
     @Mock
     ObjectMapper mapper;
 
+    @Mock
+    MonitorMatchesRepository repository;
+
     EmailService underTest;
 
     @BeforeEach
     void setUp() {
-        underTest = new EmailService(mapper, logger);
+        underTest = new EmailService(mapper, logger, repository);
     }
 
     @Test
@@ -50,6 +54,14 @@ public class EmailServiceTest {
         verify(logger, times(1)).trace(anyString());
     }
 
+    @Test
+    public void givenValidDocument_whenSaveMatchCalled_thenSuccess() {
+        EmailDocument<Map<String, Object>> document = buildValidEmailDocument(TRUE);
+
+        underTest.saveMatch(document, USER_ID);
+
+        verify(logger, times(1)).trace(anyString());
+    }
 
     @Test
     public void givenInvalidDocument_whenSaveMatchCalled_thenParseExceptionRaised() throws JsonProcessingException {
