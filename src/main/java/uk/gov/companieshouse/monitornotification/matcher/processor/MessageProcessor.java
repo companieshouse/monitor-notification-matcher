@@ -15,6 +15,7 @@ import org.springframework.stereotype.Component;
 import uk.gov.companieshouse.api.company.CompanyDetails;
 import uk.gov.companieshouse.logging.Logger;
 import uk.gov.companieshouse.monitornotification.matcher.config.properties.ExternalLinksProperties;
+import uk.gov.companieshouse.monitornotification.matcher.exception.NonRetryableException;
 import uk.gov.companieshouse.monitornotification.matcher.model.EmailDocument;
 import uk.gov.companieshouse.monitornotification.matcher.service.CompanyService;
 import uk.gov.companieshouse.monitornotification.matcher.service.EmailService;
@@ -42,15 +43,15 @@ public class MessageProcessor {
 
         // Extract the Company ID from the message supplied.
         Optional<String> companyNumber = getCompanyNumber(message);
-        if (companyNumber.isEmpty()) {
-            logger.info("No company number was detected within the notification match payload. Unable to continue.");
+        if (companyNumber.isEmpty() || companyNumber.get().isBlank()) {
+            logger.info("No company number was detected within the notification match payload. Processing aborted!");
             return;
         }
 
         // Lookup the Company Details using the Company ID extracted.
         Optional<CompanyDetails> companyDetails = companyService.findCompanyDetails(companyNumber.get());
         if (companyDetails.isEmpty()) {
-            logger.info("No company details were found with company number: [%s]. Unable to continue.".formatted(companyNumber.get()));
+            logger.info("No company details were found with company number: [%s]. Processing aborted!".formatted(companyNumber.get()));
             return;
         }
 
@@ -83,7 +84,7 @@ public class MessageProcessor {
 
         Optional<JsonNode> node = findDataNode(message, "is_delete");
         if(node.isEmpty()) {
-            logger.info("The message does not contain a valid is_delete field.");
+            logger.info("The message does not contain a valid is_delete field (defaulting to FALSE).");
             return FALSE;
         }
         return node.get().asBoolean(FALSE);
@@ -101,7 +102,7 @@ public class MessageProcessor {
 
         } catch (JsonProcessingException e) {
             logger.error("An error occurred while attempting to extract the JsonNode: %s".formatted(nodeName), e);
-            return Optional.empty();
+            throw new NonRetryableException("An error occurred while attempting to extract the JsonNode: %s".formatted(nodeName), e);
         }
     }
 

@@ -29,7 +29,7 @@ class MessageLoggingAspectTest {
     void testAspectLogging(CapturedOutput output) {
         Message<filing> message = buildFilingUpdateMessage();
 
-        consumer .consume(message);
+        consumer.consume(message);
 
         // Verifies that the aspect methods were called
         assertTrue(output.getOut().contains("Processing kafka message"));

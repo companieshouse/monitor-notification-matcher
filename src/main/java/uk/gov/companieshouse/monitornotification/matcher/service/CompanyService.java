@@ -38,14 +38,17 @@ public class CompanyService {
             return Optional.of(response.getData());
 
         } catch(ApiErrorResponseException | URIValidationException ex) {
+            String exceptionMessage = ex.getMessage();
+
             if(ex instanceof ApiErrorResponseException apiException) {
+                exceptionMessage = apiException.getStatusMessage();
                 if(apiException.getStatusCode() == HttpStatus.NOT_FOUND.value()) {
                     logger.info("No company details found for company number: %s".formatted(companyNumber));
                     return Optional.empty();
                 }
             }
             logger.error("An error occurred while attempting to retrieve company details: %s".formatted(ex.getMessage()));
-            throw new NonRetryableException(ex.getMessage(), ex);
+            throw new NonRetryableException(exceptionMessage, ex);
         }
 
     }

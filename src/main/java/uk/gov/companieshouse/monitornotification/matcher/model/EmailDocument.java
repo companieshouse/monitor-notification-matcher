@@ -13,9 +13,7 @@ public class EmailDocument<T> {
     private final String emailAddress;
     private final String createdAt;
 
-    public EmailDocument(String appId, String messageId,
-            String messageType, T data,
-            String emailAddress, String createdAt) {
+    public EmailDocument(String appId, String messageId, String messageType, T data, String emailAddress, String createdAt) {
         this.appId = appId;
         this.messageId = messageId;
         this.messageType = messageType;
