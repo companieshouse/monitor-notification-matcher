@@ -7,17 +7,20 @@ import org.springframework.stereotype.Service;
 import uk.gov.companieshouse.logging.Logger;
 import uk.gov.companieshouse.monitornotification.matcher.exception.NonRetryableException;
 import uk.gov.companieshouse.monitornotification.matcher.model.EmailDocument;
-import uk.gov.companieshouse.monitornotification.matcher.model.EmailSend;
+import uk.gov.companieshouse.monitornotification.matcher.repository.MonitorMatchesRepository;
+import uk.gov.companieshouse.monitornotification.matcher.repository.model.MonitorMatchesDocument;
 
 @Service
 public class EmailService {
 
     private final ObjectMapper mapper;
     private final Logger logger;
+    private final MonitorMatchesRepository repository;
 
-    public EmailService(final ObjectMapper mapper, final Logger logger) {
+    public EmailService(final ObjectMapper mapper, final Logger logger, final MonitorMatchesRepository repository) {
         this.mapper = mapper;
         this.logger = logger;
+        this.repository = repository;
     }
 
     public void saveMatch(final EmailDocument<?> document, final String userId) {
@@ -25,7 +28,7 @@ public class EmailService {
         try {
             var jsonData = mapper.writeValueAsString(document.getData());
 
-            EmailSend email = new EmailSend();
+            MonitorMatchesDocument email = new MonitorMatchesDocument();
             email.setAppId(document.getAppId());
             email.setMessageId(document.getMessageId());
             email.setMessageType(document.getMessageType());
@@ -34,7 +37,7 @@ public class EmailService {
             email.setUserId(userId);
 
             // Save the model to the mongo matches collection.
-
+            repository.save(email);
         } catch(JsonProcessingException ex) {
             logger.error("Failed to serialize email data: %s".formatted(ex.getMessage()));
             throw new NonRetryableException("Failed to serialize email data", ex);

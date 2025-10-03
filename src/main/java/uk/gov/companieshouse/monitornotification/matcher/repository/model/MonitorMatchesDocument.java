@@ -1,6 +1,11 @@
-package uk.gov.companieshouse.monitornotification.matcher.model;
+package uk.gov.companieshouse.monitornotification.matcher.repository.model;
 
-public class EmailSend {
+import com.fasterxml.jackson.annotation.JsonInclude;
+import org.springframework.data.mongodb.core.mapping.Document;
+
+@JsonInclude(JsonInclude.Include.NON_NULL)
+@Document(collection = "matches")
+public class MonitorMatchesDocument {
 
     private String appId;
     private String messageId;
@@ -9,7 +14,7 @@ public class EmailSend {
     private String createdAt;
     private String userId;
 
-    public EmailSend(String appId, String messageId, String messageType, String data, String createdAt, String userId) {
+    public MonitorMatchesDocument(String appId, String messageId, String messageType, String data, String createdAt, String userId) {
         this.appId = appId;
         this.messageId = messageId;
         this.messageType = messageType;
@@ -18,7 +23,7 @@ public class EmailSend {
         this.userId = userId;
     }
 
-    public EmailSend() {
+    public MonitorMatchesDocument() {
         this(null, null, null, null, null, null);
     }
 
