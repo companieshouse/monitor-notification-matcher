@@ -130,7 +130,7 @@ public class MessageProcessorTest {
         verify(logger, times(3)).debug(anyString());
         verify(companyService, times(1)).findCompanyDetails(COMPANY_NUMBER);
         verify(emailService, times(1)).saveMatch(any(EmailDocument.class), eq(USER_ID));
-        verify(emailService, times(1)).sendEmail(any(EmailDocument.class));
+        verify(emailService, times(1)).sendEmail(any(EmailDocument.class), eq(USER_ID));
     }
 
     @Test

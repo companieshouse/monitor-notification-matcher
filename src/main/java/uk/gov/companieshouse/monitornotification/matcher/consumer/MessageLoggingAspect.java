@@ -1,6 +1,7 @@
 package uk.gov.companieshouse.monitornotification.matcher.consumer;
 
 import java.util.Optional;
+import java.util.UUID;
 import org.aspectj.lang.JoinPoint;
 import org.aspectj.lang.annotation.After;
 import org.aspectj.lang.annotation.Aspect;
@@ -53,12 +54,15 @@ public class MessageLoggingAspect {
         var topic = (String) Optional.ofNullable(messageHeaders.get(KafkaHeaders.RECEIVED_TOPIC)).orElse("no topic");
         var partition = (Integer) Optional.ofNullable(messageHeaders.get(KafkaHeaders.RECEIVED_PARTITION)).orElse(0);
         var offset = (Long) Optional.ofNullable(messageHeaders.get(KafkaHeaders.OFFSET)).orElse(0L);
+        var correlationId = (String) Optional.ofNullable(messageHeaders.get(KafkaHeaders.CORRELATION_ID))
+                .orElse(UUID.randomUUID().toString());
 
         var dataMap = new DataMap.Builder()
                 .topic(topic)
                 .partition(partition)
                 .offset(offset)
                 .kafkaMessage(incomingMessage.getPayload().toString())
+                .requestId(correlationId)
                 .build();
 
         logger.debug(logMessage, dataMap.getLogMap());

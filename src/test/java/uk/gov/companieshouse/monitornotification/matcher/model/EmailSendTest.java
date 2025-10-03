@@ -11,11 +11,11 @@ import org.mockito.junit.jupiter.MockitoExtension;
 @ExtendWith(MockitoExtension.class)
 public class EmailSendTest {
 
-    EmailSend underTest;
+    MessageSend underTest;
 
     @BeforeEach
     public void setUp() {
-        underTest = new EmailSend();
+        underTest = new MessageSend();
 
         underTest.setAppId("test-app-id");
         underTest.setMessageId("test-message-id");

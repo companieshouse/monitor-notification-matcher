@@ -20,13 +20,13 @@ public class ApiClientConfigTest {
 
     @BeforeEach
     public void setUp() {
-        underTest = new ApiClientConfig(LoggerFactory.getLogger("test-logger"));
+        underTest = new ApiClientConfig("http://example.com", "test-api-key",
+                LoggerFactory.getLogger("test-logger"));
     }
 
     @Test
     public void testApiClientConfig() {
-        Supplier<InternalApiClient> result = underTest.internalApiClientSupplier(
-                "http://example.com", "test-api-key");
+        Supplier<InternalApiClient> result = underTest.internalApiClientSupplier();
 
         assertThat(result, is(notNullValue()));
         assertThat(result.get(), is(notNullValue()));

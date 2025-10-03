@@ -11,19 +11,24 @@ import uk.gov.companieshouse.logging.Logger;
 @Configuration
 public class ApiClientConfig {
 
+    private final String internalApiUrl;
+    private final String internalApiKey;
+
     private final Logger logger;
 
     /**
      * Constructor.
      */
-    public ApiClientConfig(final Logger logger) {
+    public ApiClientConfig(@Value("${spring.internal.api.url}") String internalApiUrl,
+            @Value("${spring.internal.api.key}") String internalApiKey,
+            final Logger logger) {
+        this.internalApiUrl = internalApiUrl;
+        this.internalApiKey = internalApiKey;
         this.logger = logger;
     }
 
     @Bean("internalApiClientSupplier")
-    public Supplier<InternalApiClient> internalApiClientSupplier(
-            @Value("${spring.internal.api.url}") String internalApiUrl,
-            @Value("${spring.internal.api.key}") String internalApiKey) {
+    public Supplier<InternalApiClient> internalApiClientSupplier() {
         logger.trace("internalApiClientSupplier(url=%s) method called.".formatted(internalApiUrl));
 
         return () -> {

@@ -45,7 +45,7 @@ public class EmailServiceTest {
     public void givenValidDocument_whenSendEmailCalled_thenSuccess() {
         EmailDocument<Map<String, Object>> document = buildValidEmailDocument(TRUE);
 
-        underTest.sendEmail(document);
+        underTest.sendEmail(document, USER_ID);
 
         verify(logger, times(1)).trace(anyString());
     }
@@ -75,7 +75,7 @@ public class EmailServiceTest {
         when(mapper.writeValueAsString(document.getData())).thenThrow(JsonProcessingException.class);
 
         NonRetryableException expectedException = assertThrows(NonRetryableException.class, () -> {
-            underTest.sendEmail(document);
+            underTest.sendEmail(document, USER_ID);
         });
 
         verify(logger, times(1)).trace(anyString());

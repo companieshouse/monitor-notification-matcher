@@ -64,7 +64,7 @@ public class MessageProcessor {
         emailService.saveMatch(emailDocument, message.getUserId());
 
         // Send the email document to the email service for processing.
-        emailService.sendEmail(emailDocument);
+        emailService.sendEmail(emailDocument, message.getUserId());
 
     }
 

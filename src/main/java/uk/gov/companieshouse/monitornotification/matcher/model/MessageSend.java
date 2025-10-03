@@ -1,6 +1,6 @@
 package uk.gov.companieshouse.monitornotification.matcher.model;
 
-public class EmailSend {
+public class MessageSend {
 
     private String appId;
     private String messageId;
@@ -9,7 +9,7 @@ public class EmailSend {
     private String createdAt;
     private String userId;
 
-    public EmailSend(String appId, String messageId, String messageType, String data, String createdAt, String userId) {
+    public MessageSend(String appId, String messageId, String messageType, String data, String createdAt, String userId) {
         this.appId = appId;
         this.messageId = messageId;
         this.messageType = messageType;
@@ -18,7 +18,7 @@ public class EmailSend {
         this.userId = userId;
     }
 
-    public EmailSend() {
+    public MessageSend() {
         this(null, null, null, null, null, null);
     }
 

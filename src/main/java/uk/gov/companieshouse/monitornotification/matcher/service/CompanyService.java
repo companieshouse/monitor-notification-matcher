@@ -12,6 +12,7 @@ import uk.gov.companieshouse.api.handler.exception.URIValidationException;
 import uk.gov.companieshouse.api.model.ApiResponse;
 import uk.gov.companieshouse.logging.Logger;
 import uk.gov.companieshouse.monitornotification.matcher.exception.NonRetryableException;
+import uk.gov.companieshouse.monitornotification.matcher.logging.DataMapHolder;
 
 @Service
 public class CompanyService {
@@ -28,6 +29,7 @@ public class CompanyService {
         logger.trace("findCompanyDetails(companyNumber=%s) method called.".formatted(companyNumber));
         try {
             InternalApiClient apiClient = supplier.get();
+            apiClient.getHttpClient().setRequestId(DataMapHolder.getRequestId());
 
             PrivateCompanyDetailsGet companyDetails = apiClient
                     .privateCompanyDetailResourceHandler()
