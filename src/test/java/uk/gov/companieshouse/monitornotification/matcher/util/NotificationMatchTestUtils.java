@@ -1,115 +1,197 @@
 package uk.gov.companieshouse.monitornotification.matcher.util;
 
-import static org.springframework.kafka.support.KafkaHeaders.EXCEPTION_CAUSE_FQCN;
+import static java.lang.String.format;
 
-import consumer.exception.NonRetryableErrorException;
-import consumer.serialization.AvroSerializer;
-import java.time.LocalDateTime;
+import java.util.Map;
+import java.util.TreeMap;
+import java.util.UUID;
 import monitor.filing;
-import org.apache.kafka.common.header.internals.RecordHeader;
 import org.springframework.messaging.Message;
 import org.springframework.messaging.support.MessageBuilder;
+import uk.gov.companieshouse.api.company.CompanyDetails;
+import uk.gov.companieshouse.monitornotification.matcher.model.EmailDocument;
+import uk.gov.companieshouse.monitornotification.matcher.serdes.GenericSerializer;
+import uk.gov.companieshouse.monitornotification.matcher.service.CompanyService;
 
 public class NotificationMatchTestUtils {
 
-    public static final String KIND = "email";
-    public static final String USER_ID = "1vKD26OwehmZI6MpGz9D02-dmCI";
-    public static final String ID = "654321";
     public static final String COMPANY_NUMBER = "00006400";
-    public static final LocalDateTime CREATED_DATE = LocalDateTime.parse("2023-10-10T10:00:00");
-    public static final Boolean ACTIVE = Boolean.TRUE;
-    public static final LocalDateTime UPDATED_DATE = CREATED_DATE.plusDays(1);
-    public static final String QUERY = "QUERY transaction WHERE company_number=\"%s\"".formatted(COMPANY_NUMBER);
-    public static final String NOTIFIED_AT = "2025-03-03T15:04:03";
-    public static final String TRANSACTION_ID = "158153-915517-386847";
-    public static final String VERSION = "0";
+    public static final String COMPANY_NAME = "THE GIRLS DAY SCHOOL TRUST";
+    public static final String COMPANY_STATUS = "active";
 
-    private static final String NOTIFICATION_MATCH_DATA = """
-      {
-        "data": {
-          "app_id": "chs-monitor-notification-matcher.filing",
-          "company_number": "00006400",
-          "data": {
-            "type": "AP01",
-            "description" : "appoint-person-director-company-with-name-date",
-            "description_values" : {
-              "appointment_date" : "1 December 2024",
-              "officer_name" : "DR AMIDAT DUPE IYIOLA"
-            },
-            "links" : {
-              "self" : "/transactions/158153-915517-386847/officers/67a2396e8e70c90c76a3ba62"
-            },
-            "category": "officers",
-            "paper_filed": false,
-            "subcategory": "appointments",
-            "action_date": "2025-02-04",
-            "date": "2025-02-04"
-          },
-          "is_delete": false
-        },
-        "kind": "email",
-        "notified_at": "1453896192000",
-        "user_id": "1vKD26OwehmZI6MpGz9D02-dmCI"
-      }
-    """;
+    public static final String CHS_URL = "https://test.chs-url.gov.uk";
+    public static final String MONITOR_URL = "https://test.follow-url.gov.uk";
+
+    public static final String KIND = "email";
+    public static final String NOTIFIED_AT = "1453896192000";
+    public static final String USER_ID = "1vKD26OwehmZI6MpGz9D02-dmCI";
+
+    private static final String NOTIFICATION_MATCH_UPDATE_DATA = """
+            {
+                "app_id": "chs-monitor-notification-matcher.filing",
+                "company_number": "%s",
+                "data": {
+                  "type": "AP01",
+                  "description" : "appoint-person-director-company-with-name-date",
+                  "description_values" : {
+                    "appointment_date" : "1 December 2024",
+                    "officer_name" : "DR AMIDAT DUPE IYIOLA"
+                  },
+                  "links" : {
+                    "self" : "/transactions/158153-915517-386847/officers/67a2396e8e70c90c76a3ba62"
+                  },
+                  "category": "officers",
+                  "paper_filed": false,
+                  "subcategory": "appointments",
+                  "action_date": "2025-02-04",
+                  "date": "2025-02-04"
+                },
+                "is_delete": false
+            }
+            """;
+
+    private static final String NOTIFICATION_MATCH_DELETE_DATA = """
+            {
+                "app_id": "chs-monitor-notification-matcher.filing",
+                "company_number": "%s",
+                "data": {
+                  "type": "AP01",
+                  "description" : "appoint-person-director-company-with-name-date",
+                  "description_values" : {
+                    "appointment_date" : "1 December 2024",
+                    "officer_name" : "DR AMIDAT DUPE IYIOLA"
+                  },
+                  "links" : {
+                    "self" : "/transactions/158153-915517-386847/officers/67a2396e8e70c90c76a3ba62"
+                  },
+                  "category": "officers",
+                  "paper_filed": false,
+                  "subcategory": "appointments",
+                  "action_date": "2025-02-04",
+                  "date": "2025-02-04"
+                },
+                "is_delete": true
+            }
+            """;
+
+    private static final String NOTIFICATION_MATCH_DELETE_DATA_WITHOUT_IS_DELETE = """
+            {
+                "app_id": "chs-monitor-notification-matcher.filing",
+                "company_number": "%s",
+                "data": {
+                  "type": "AP01",
+                  "description" : "appoint-person-director-company-with-name-date",
+                  "description_values" : {
+                    "appointment_date" : "1 December 2024",
+                    "officer_name" : "DR AMIDAT DUPE IYIOLA"
+                  },
+                  "links" : {
+                    "self" : "/transactions/158153-915517-386847/officers/67a2396e8e70c90c76a3ba62"
+                  },
+                  "category": "officers",
+                  "paper_filed": false,
+                  "subcategory": "appointments",
+                  "action_date": "2025-02-04",
+                  "date": "2025-02-04"
+                }
+            }
+            """;
+
+    private static final String NOTIFICATION_MATCH_DELETE_DATA_WITHOUT_COMPANY_NUMBER = """
+            {
+                "app_id": "chs-monitor-notification-matcher.filing",
+                "data": {
+                  "type": "AP01",
+                  "description" : "appoint-person-director-company-with-name-date",
+                  "description_values" : {
+                    "appointment_date" : "1 December 2024",
+                    "officer_name" : "DR AMIDAT DUPE IYIOLA"
+                  },
+                  "links" : {
+                    "self" : "/transactions/158153-915517-386847/officers/67a2396e8e70c90c76a3ba62"
+                  },
+                  "category": "officers",
+                  "paper_filed": false,
+                  "subcategory": "appointments",
+                  "action_date": "2025-02-04",
+                  "date": "2025-02-04"
+                },
+                "is_delete": true
+            }
+            """;
 
     private static filing buildFilingWithData(final String data) {
         return filing.newBuilder()
                 .setData(data)
-                .setNotifiedAt(NOTIFIED_AT)
                 .setKind(KIND)
+                .setNotifiedAt(NOTIFIED_AT)
                 .setUserId(USER_ID)
                 .build();
     }
 
     public static Message<filing> buildFilingUpdateMessage() {
         return MessageBuilder
-                .withPayload(buildFilingWithData(NOTIFICATION_MATCH_DATA))
+                .withPayload(buildFilingWithData(NOTIFICATION_MATCH_UPDATE_DATA.formatted(COMPANY_NUMBER)))
                 .setHeader("kafka_receivedTopic", "test-topic")
                 .setHeader("kafka_offset", 42L)  // optional
                 .build();
     }
-    public static Message<filing> buildFilingInvalidMessage() {
-        String dataString = "This is NOT valid JSON data";
 
+    public static Message<filing> buildFilingDeleteMessageWithoutCompanyNumber() {
         return MessageBuilder
-                .withPayload(buildFilingWithData(dataString))
+                .withPayload(buildFilingWithData(NOTIFICATION_MATCH_DELETE_DATA_WITHOUT_COMPANY_NUMBER))
                 .setHeader("kafka_receivedTopic", "test-topic")
                 .setHeader("kafka_offset", 42L)  // optional
                 .build();
     }
 
-    public static Message<filing> buildFilingEmptyDataMessage() {
+    public static Message<filing> buildFilingDeleteMessageWithoutIsDelete() {
         return MessageBuilder
-                .withPayload(buildFilingWithData(""))
+                .withPayload(buildFilingWithData(NOTIFICATION_MATCH_DELETE_DATA_WITHOUT_IS_DELETE.formatted(COMPANY_NUMBER)))
                 .setHeader("kafka_receivedTopic", "test-topic")
                 .setHeader("kafka_offset", 42L)  // optional
                 .build();
     }
 
-    public static Message<filing> buildFilingNullDataMessage() {
+    public static Message<filing> buildFilingDeleteMessageWithBlankCompanyNumber() {
         return MessageBuilder
-                .withPayload(buildFilingWithData(null))
+                .withPayload(buildFilingWithData(NOTIFICATION_MATCH_DELETE_DATA.formatted("")))
                 .setHeader("kafka_receivedTopic", "test-topic")
                 .setHeader("kafka_offset", 42L)  // optional
                 .build();
     }
-
-    public static Message<filing> buildFilingMessageWithExceptionCauseHeader() {
-        String dataString = "";
-
-        return MessageBuilder
-                .withPayload(buildFilingWithData(dataString))
-                .setHeader(EXCEPTION_CAUSE_FQCN, new RecordHeader("exception-cause-key", NonRetryableErrorException.class.getName().getBytes()))
-                .setHeader("kafka_receivedTopic", "test-topic")
-                .setHeader("kafka_offset", 42L)  // optional
-                .build();
-    }
-
 
     public static byte[] buildFilingRawAvroMessage() {
-        return new AvroSerializer().serialize("test-topic", buildFilingUpdateMessage().getPayload());
+        return new GenericSerializer().serialize("test-topic", buildFilingUpdateMessage().getPayload());
     }
 
-}
+    public static CompanyDetails buildCompanyDetails() {
+        CompanyDetails companyDetails = new CompanyDetails();
+        companyDetails.setCompanyNumber(COMPANY_NUMBER);
+        companyDetails.setCompanyName(COMPANY_NAME);
+        companyDetails.setCompanyStatus(COMPANY_STATUS);
+        return companyDetails;
+    }
 
+    public static EmailDocument<Map<String, Object>> buildValidEmailDocument(Boolean isDelete) {
+        CompanyDetails details = buildCompanyDetails();
+
+        Map<String, Object> dataMap = new TreeMap<>();
+        dataMap.put("CompanyName", details.getCompanyName());
+        dataMap.put("CompanyNumber", details.getCompanyNumber());
+        dataMap.put("IsDelete", isDelete);
+        dataMap.put("MonitorURL", MONITOR_URL);
+        dataMap.put("ChsURL", CHS_URL);
+        dataMap.put("from", "Companies House <noreply@companieshouse.gov.uk>");
+        dataMap.put("subject", format("Company number %s %s", details.getCompanyNumber(), details.getCompanyName()));
+
+        return EmailDocument.<Map<String, Object>>builder()
+                .withAppId("monitor-notification-matcher.filing")
+                .withMessageId(UUID.randomUUID().toString())
+                .withMessageType("monitor_email")
+                .withCreatedAt(NOTIFIED_AT)
+                .withRecipientEmailAddress(null)
+                .withData(dataMap)
+                .build();
+    }
+}

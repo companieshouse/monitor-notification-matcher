@@ -4,12 +4,13 @@ import static org.hamcrest.MatcherAssert.assertThat;
 import static org.hamcrest.Matchers.is;
 import static org.hamcrest.Matchers.notNullValue;
 import static org.junit.jupiter.api.Assertions.assertThrows;
+import static uk.gov.companieshouse.monitornotification.matcher.util.NotificationMatchTestUtils.KIND;
+import static uk.gov.companieshouse.monitornotification.matcher.util.NotificationMatchTestUtils.NOTIFIED_AT;
+import static uk.gov.companieshouse.monitornotification.matcher.util.NotificationMatchTestUtils.USER_ID;
 import static uk.gov.companieshouse.monitornotification.matcher.util.NotificationMatchTestUtils.buildFilingRawAvroMessage;
 
 import consumer.exception.NonRetryableErrorException;
-import java.io.IOException;
 import java.nio.charset.StandardCharsets;
-
 import monitor.filing;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
@@ -27,16 +28,16 @@ public class NotificationMatchDeserializerTest {
     }
 
     @Test
-    public void givenValidPayload_whenDeserialized_thenSuccessReturned() throws IOException {
+    public void givenValidPayload_whenDeserialized_thenSuccessReturned() {
         byte[] payload = buildFilingRawAvroMessage();
 
         filing result = underTest.deserialize("test-topic", payload);
 
         assertThat(result, is(notNullValue()));
-        assertThat(result.getNotifiedAt(), is("2025-03-03T15:04:03"));
         assertThat(result.getData(), is(notNullValue()));
-        assertThat(result.getUserId(), is("1vKD26OwehmZI6MpGz9D02-dmCI"));
-        assertThat(result.getKind(), is("email"));
+        assertThat(result.getKind(), is(KIND));
+        assertThat(result.getNotifiedAt(), is(NOTIFIED_AT));
+        assertThat(result.getUserId(), is(USER_ID));
     }
 
     @Test
@@ -51,4 +52,3 @@ public class NotificationMatchDeserializerTest {
         assertThat(expectedException.getMessage(), is("De-Serialization exception while converting to Avro schema object"));
     }
 }
-

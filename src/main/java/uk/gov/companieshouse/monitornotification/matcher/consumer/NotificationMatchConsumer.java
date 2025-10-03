@@ -13,12 +13,12 @@ import uk.gov.companieshouse.logging.Logger;
 import uk.gov.companieshouse.monitornotification.matcher.exception.NonRetryableException;
 import uk.gov.companieshouse.monitornotification.matcher.exception.RetryableException;
 import uk.gov.companieshouse.monitornotification.matcher.logging.DataMapHolder;
-import uk.gov.companieshouse.monitornotification.matcher.service.NotificationMatchService;
+import uk.gov.companieshouse.monitornotification.matcher.processor.MessageProcessor;
 
 @Component
 public class NotificationMatchConsumer {
 
-    private final NotificationMatchService service;
+    private final MessageProcessor processor;
     private final MessageFlags messageFlags;
     private final Logger logger;
 
@@ -26,12 +26,12 @@ public class NotificationMatchConsumer {
 
     /**
      * Mandatory constructor.
-     * @param service the service to delegate message processing to.
+     * @param processor the processor to delegate message processing to.
      * @param messageFlags flags to indicate the type of message being processed.
      * @param logger the logger to use for logging.
      */
-    public NotificationMatchConsumer(NotificationMatchService service, MessageFlags messageFlags, Logger logger) {
-        this.service = service;
+    public NotificationMatchConsumer(MessageProcessor processor, MessageFlags messageFlags, Logger logger) {
+        this.processor = processor;
         this.messageFlags = messageFlags;
         this.logger = logger;
     }
@@ -65,8 +65,8 @@ public class NotificationMatchConsumer {
                 callback.accept(message.getPayload());
             }
 
-            // Process the message via the matcher service.
-            service.processMessage(message.getPayload());
+            // Process the message via the message processor.
+            processor.processMessage(message.getPayload());
 
         } catch(NonRetryableException ex) {
             logger.error("Non-Retryable exception encountered processing message!", ex, DataMapHolder.getLogMap());

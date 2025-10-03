@@ -17,5 +17,15 @@ spring:
         backoff-delay: 1000
         concurrency: 1
 
+  internal:
+    api:
+      url: ${PRIVATE_API_URL:http://api.chs.local:4001}
+      key: ${CHS_INTERNAL_API_KEY:g9yZIA81Zo9J46Kzp3JPbfld6kOqxR47EAYqXbRV}
+
+  external:
+    links:
+      chs-url: http://test.chs.local
+      monitor-url: http://follow.test.chs.local
+
 server:
   port: 9191

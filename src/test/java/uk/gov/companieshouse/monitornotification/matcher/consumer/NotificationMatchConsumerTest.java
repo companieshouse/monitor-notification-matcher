@@ -22,13 +22,13 @@ import org.springframework.messaging.Message;
 import uk.gov.companieshouse.logging.Logger;
 import uk.gov.companieshouse.monitornotification.matcher.exception.NonRetryableException;
 import uk.gov.companieshouse.monitornotification.matcher.exception.RetryableException;
-import uk.gov.companieshouse.monitornotification.matcher.service.NotificationMatchService;
+import uk.gov.companieshouse.monitornotification.matcher.processor.MessageProcessor;
 
 @ExtendWith(MockitoExtension.class)
 public class NotificationMatchConsumerTest {
 
     @Mock
-    NotificationMatchService service;
+    MessageProcessor processor;
 
     @Mock
     MessageFlags flags;
@@ -52,14 +52,14 @@ public class NotificationMatchConsumerTest {
         underTest.consume(transactionMessage);
 
         verify(logger, times(1)).debug(anyString());
-        verify(service, times(1)).processMessage(transactionMessage.getPayload());
+        verify(processor, times(1)).processMessage(transactionMessage.getPayload());
     }
 
     @Test
     @DisplayName("Given an invalid JSON payload, when consumed, then non-retryable exception is thrown")
     void givenInvalidMessage_whenConsumed_thenRaiseNonRetryableException() throws IOException {
         Message<filing> transactionMessage = buildFilingUpdateMessage();
-        doThrow(new NonRetryableException("test exception")).when(service).processMessage(transactionMessage.getPayload());
+        doThrow(new NonRetryableException("test exception")).when(processor).processMessage(transactionMessage.getPayload());
 
         NonRetryableException expectedException = assertThrows(NonRetryableException.class, () -> {
             underTest.consume(transactionMessage);
@@ -67,7 +67,7 @@ public class NotificationMatchConsumerTest {
 
         verify(logger, times(1)).debug(anyString());
         verify(flags, times(1)).setRetryable(false);
-        verify(service, times(1)).processMessage(transactionMessage.getPayload());
+        verify(processor, times(1)).processMessage(transactionMessage.getPayload());
 
         assertThat(expectedException.getMessage(), is("test exception"));
     }
@@ -76,7 +76,7 @@ public class NotificationMatchConsumerTest {
     @DisplayName("Given an invalid JSON payload, when consumed, then retryable exception is thrown")
     void givenInvalidMessage_whenConsumed_thenRaiseRetryableException() throws IOException {
         Message<filing> transactionMessage = buildFilingUpdateMessage();
-        doThrow(new RetryableException("test exception", new RuntimeException())).when(service).processMessage(transactionMessage.getPayload());
+        doThrow(new RetryableException("test exception", new RuntimeException())).when(processor).processMessage(transactionMessage.getPayload());
 
         RetryableException expectedException = assertThrows(RetryableException.class, () -> {
             underTest.consume(transactionMessage);
@@ -84,7 +84,7 @@ public class NotificationMatchConsumerTest {
 
         verify(logger, times(1)).debug(anyString());
         verify(flags, times(1)).setRetryable(true);
-        verify(service, times(1)).processMessage(transactionMessage.getPayload());
+        verify(processor, times(1)).processMessage(transactionMessage.getPayload());
 
         assertThat(expectedException.getMessage(), is("test exception"));
     }

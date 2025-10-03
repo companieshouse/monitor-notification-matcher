@@ -4,7 +4,7 @@ spring:
     name: monitor-notification-matcher
 
   kafka:
-    bootstrap-servers: ${KAFKA_BROKER_ADDR:kafka3:9092}
+    bootstrap-servers: ${KAFKA_BROKER_ADDR:localhost:9092}
     consumer:
       notify:
         topic: ${NOTIFICATION_MATCH_TOPIC:notification-match}
@@ -12,6 +12,16 @@ spring:
         max-attempts: ${MAX_ATTEMPTS:5}
         backoff-delay: ${BACKOFF_DELAY:1000}
         concurrency: ${CONCURRENT_LISTENER_INSTANCES:1}
+
+  internal:
+    api:
+      url: ${PRIVATE_API_URL:http://api.chs.local:4001}
+      key: ${CHS_INTERNAL_API_KEY:default-internal-api-key}
+
+  external:
+    links:
+      chs-url: ${CHS_URL:http://chs.local}
+      monitor-url: ${CHS_MONITOR_GUI_URL:http://follow.chs.local}
 
 management:
   endpoints:
