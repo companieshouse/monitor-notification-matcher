@@ -27,5 +27,10 @@ spring:
       chs-url: http://test.chs.local
       monitor-url: http://follow.test.chs.local
 
+  data:
+    mongodb:
+      uri: mongodb://localhost:27017
+      database: monitor
+
 server:
   port: 9191

@@ -16,17 +16,26 @@ import static uk.gov.companieshouse.monitornotification.matcher.util.Notificatio
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import java.util.Map;
+import java.util.function.Supplier;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
+import uk.gov.companieshouse.api.InternalApiClient;
 import uk.gov.companieshouse.logging.Logger;
 import uk.gov.companieshouse.monitornotification.matcher.exception.NonRetryableException;
 import uk.gov.companieshouse.monitornotification.matcher.model.EmailDocument;
+import uk.gov.companieshouse.monitornotification.matcher.repository.MonitorMatchesRepository;
 
 @ExtendWith(MockitoExtension.class)
 public class EmailServiceTest {
+
+    @Mock
+    Supplier<InternalApiClient> supplier;
+
+    @Mock
+    MonitorMatchesRepository repository;
 
     @Mock
     Logger logger;
@@ -38,7 +47,7 @@ public class EmailServiceTest {
 
     @BeforeEach
     void setUp() {
-        underTest = new EmailService(mapper, logger);
+        underTest = new EmailService(supplier, repository, mapper, logger);
     }
 
     @Test
@@ -47,9 +56,17 @@ public class EmailServiceTest {
 
         underTest.sendEmail(document, USER_ID);
 
-        verify(logger, times(1)).trace(anyString());
+        verify(logger, times(2)).trace(anyString());
     }
 
+    @Test
+    public void givenValidDocument_whenSaveMatchCalled_thenSuccess() {
+        EmailDocument<Map<String, Object>> document = buildValidEmailDocument(TRUE);
+
+        underTest.saveMatch(document, USER_ID);
+
+        verify(logger, times(1)).trace(anyString());
+    }
 
     @Test
     public void givenInvalidDocument_whenSaveMatchCalled_thenParseExceptionRaised() throws JsonProcessingException {
@@ -78,7 +95,7 @@ public class EmailServiceTest {
             underTest.sendEmail(document, USER_ID);
         });
 
-        verify(logger, times(1)).trace(anyString());
+        verify(logger, times(2)).trace(anyString());
         verify(mapper, times(1)).writeValueAsString(document.getData());
         verify(logger, times(1)).error(anyString());
 
