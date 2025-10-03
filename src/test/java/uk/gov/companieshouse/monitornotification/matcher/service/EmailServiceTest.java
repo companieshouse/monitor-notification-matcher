@@ -10,6 +10,7 @@ import static org.mockito.ArgumentMatchers.anyString;
 import static org.mockito.Mockito.times;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
+import static uk.gov.companieshouse.monitornotification.matcher.util.NotificationMatchTestUtils.USER_ID;
 import static uk.gov.companieshouse.monitornotification.matcher.util.NotificationMatchTestUtils.buildValidEmailDocument;
 
 import com.fasterxml.jackson.core.JsonProcessingException;
@@ -49,6 +50,25 @@ public class EmailServiceTest {
         verify(logger, times(1)).trace(anyString());
     }
 
+
+    @Test
+    public void givenInvalidDocument_whenSaveMatchCalled_thenParseExceptionRaised() throws JsonProcessingException {
+        EmailDocument<Map<String, Object>> document = buildValidEmailDocument(FALSE);
+        when(mapper.writeValueAsString(document.getData())).thenThrow(JsonProcessingException.class);
+
+        NonRetryableException expectedException = assertThrows(NonRetryableException.class, () -> {
+            underTest.saveMatch(document, USER_ID);
+        });
+
+        verify(logger, times(1)).trace(anyString());
+        verify(mapper, times(1)).writeValueAsString(document.getData());
+        verify(logger, times(1)).error(anyString());
+
+        assertThat(expectedException, is(notNullValue()));
+        assertThat(expectedException.getMessage(), is("Failed to serialize email data"));
+        assertThat(expectedException.getCause().getClass(), is(JsonProcessingException.class));
+    }
+
     @Test
     public void givenInvalidDocument_whenSendEmailCalled_thenParseExceptionRaised() throws JsonProcessingException {
         EmailDocument<Map<String, Object>> document = buildValidEmailDocument(FALSE);
@@ -59,6 +79,7 @@ public class EmailServiceTest {
         });
 
         verify(logger, times(1)).trace(anyString());
+        verify(mapper, times(1)).writeValueAsString(document.getData());
         verify(logger, times(1)).error(anyString());
 
         assertThat(expectedException, is(notNullValue()));
