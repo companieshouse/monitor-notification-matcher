@@ -33,6 +33,7 @@ import org.springframework.messaging.Message;
 import uk.gov.companieshouse.api.company.CompanyDetails;
 import uk.gov.companieshouse.logging.Logger;
 import uk.gov.companieshouse.monitornotification.matcher.config.properties.ExternalLinksProperties;
+import uk.gov.companieshouse.monitornotification.matcher.enumerationshelper.FilingHistoryDescriptionsEnumerationsHelper;
 import uk.gov.companieshouse.monitornotification.matcher.exception.NonRetryableException;
 import uk.gov.companieshouse.monitornotification.matcher.model.EmailDocument;
 import uk.gov.companieshouse.monitornotification.matcher.service.CompanyService;
@@ -46,6 +47,9 @@ public class MessageProcessorTest {
 
     @Mock
     CompanyService companyService;
+
+    @Mock
+    FilingHistoryDescriptionsEnumerationsHelper filingHistoryDescriptionsEnumerationsHelper;
 
     ObjectMapper mapper;
 
@@ -64,7 +68,7 @@ public class MessageProcessorTest {
         properties.setChsUrl("https://chs-url.companieshouse.gov.uk");
         properties.setMonitorUrl("https://monitor-url.companieshouse.gov.uk");
 
-        underTest = new MessageProcessor(emailService, companyService, mapper, logger, properties);
+        underTest = new MessageProcessor(emailService, companyService, mapper, logger, properties, filingHistoryDescriptionsEnumerationsHelper);
     }
 
     @Test
@@ -125,9 +129,9 @@ public class MessageProcessorTest {
 
         underTest.processMessage(payload);
 
-        verify(logger, times(6)).trace(anyString());
+        verify(logger, times(7)).trace(anyString());
         verify(logger, times(1)).info("The message does not contain a valid is_delete field (defaulting to FALSE).");
-        verify(logger, times(3)).debug(anyString());
+        verify(logger, times(4)).debug(anyString());
         verify(companyService, times(1)).findCompanyDetails(COMPANY_NUMBER);
         verify(emailService, times(1)).saveMatch(any(EmailDocument.class), eq(USER_ID));
         verify(emailService, times(1)).sendEmail(any(EmailDocument.class));

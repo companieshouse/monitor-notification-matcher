@@ -1,5 +1,6 @@
 package uk.gov.companieshouse.monitornotification.matcher.processor;
 
+import java.io.IOException;
 import static java.lang.Boolean.FALSE;
 import static java.lang.String.format;
 
@@ -11,6 +12,7 @@ import java.util.Optional;
 import java.util.TreeMap;
 import java.util.UUID;
 import monitor.filing;
+
 import org.springframework.stereotype.Component;
 import uk.gov.companieshouse.api.company.CompanyDetails;
 import uk.gov.companieshouse.logging.Logger;
@@ -19,6 +21,7 @@ import uk.gov.companieshouse.monitornotification.matcher.exception.NonRetryableE
 import uk.gov.companieshouse.monitornotification.matcher.model.EmailDocument;
 import uk.gov.companieshouse.monitornotification.matcher.service.CompanyService;
 import uk.gov.companieshouse.monitornotification.matcher.service.EmailService;
+import uk.gov.companieshouse.monitornotification.matcher.enumerationshelper.FilingHistoryDescriptionsEnumerationsHelper;
 
 @Component
 public class MessageProcessor {
@@ -28,14 +31,15 @@ public class MessageProcessor {
     private final ObjectMapper objectMapper;
     private final Logger logger;
     private final ExternalLinksProperties properties;
+    private final FilingHistoryDescriptionsEnumerationsHelper filingHistoryDescriptionsEnumerationsHelper;
 
-    public MessageProcessor(final EmailService emailService, final CompanyService companyService,
-            final ObjectMapper objectMapper, final Logger logger, final ExternalLinksProperties properties) {
+    public MessageProcessor(final EmailService emailService, final CompanyService companyService, final ObjectMapper objectMapper, final Logger logger, final ExternalLinksProperties properties, final FilingHistoryDescriptionsEnumerationsHelper filingHistoryDescriptionsEnumerationsHelper) {
         this.emailService = emailService;
         this.companyService = companyService;
         this.objectMapper = objectMapper;
         this.logger = logger;
         this.properties = properties;
+        this.filingHistoryDescriptionsEnumerationsHelper = filingHistoryDescriptionsEnumerationsHelper;
     }
 
     public void processMessage(final filing message) {
@@ -117,6 +121,28 @@ public class MessageProcessor {
         dataMap.put("ChsURL", properties.getChsUrl());
         dataMap.put("from", "Companies House <noreply@companieshouse.gov.uk>");
         dataMap.put("subject", format("Company number %s %s", details.getCompanyNumber(), details.getCompanyName()));
+        dataMap.put("FilingType", message.getKind());
+        dataMap.put("FilingDate", message.getNotifiedAt());
+        // set 'FilingDescription' to relevant value(s)
+        Optional<JsonNode> descriptionNode = findDataNode(message, "description");
+        if (!descriptionNode.isEmpty()) {
+            Optional<JsonNode> descriptionValuesNode = findDataNode(message, "description_values");
+            if (descriptionNode.get().asText().equals("legacy")) {
+                if (!descriptionValuesNode.get().asText().equals("")) {
+                    dataMap.put("FilingDescription", descriptionValuesNode.get().asText());
+                }
+            } else {
+                try {
+                    String filingDescription = filingHistoryDescriptionsEnumerationsHelper.getFilingHistoryDescription(
+                        descriptionNode.get().asText(),
+                        descriptionValuesNode
+                    );
+                    dataMap.put("FilingDescription", filingDescription);
+                } catch(IOException e){
+                    logger.error("An error occurred while attempting to format enumeration: %s".formatted(descriptionNode.get().asText()), e);
+                }
+            }
+        }
 
         return EmailDocument.<Map<String, Object>>builder()
                 .withAppId("monitor-notification-matcher.filing")

@@ -9,6 +9,8 @@ import com.fasterxml.jackson.datatype.jsr310.JavaTimeModule;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
+import org.yaml.snakeyaml.Yaml;
+
 import uk.gov.companieshouse.environment.EnvironmentReader;
 import uk.gov.companieshouse.environment.impl.EnvironmentReaderImpl;
 import uk.gov.companieshouse.kafka.serialization.SerializerFactory;
@@ -45,4 +47,8 @@ public class ApplicationConfig {
                 .configure(SerializationFeature.FAIL_ON_EMPTY_BEANS, false);
     }
 
+    @Bean
+    public Yaml yaml(){
+        return new Yaml();
+    }
 }
