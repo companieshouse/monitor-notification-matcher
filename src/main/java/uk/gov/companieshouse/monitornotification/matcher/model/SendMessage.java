@@ -1,25 +1,29 @@
 package uk.gov.companieshouse.monitornotification.matcher.model;
 
-public class MessageSend {
+import com.fasterxml.jackson.annotation.JsonProperty;
 
+public class SendMessage {
+
+    @JsonProperty("app_id")
     private String appId;
+
+    @JsonProperty("message_id")
     private String messageId;
+
+    @JsonProperty("message_type")
     private String messageType;
-    private String data;
-    private String createdAt;
+
+    @JsonProperty("data")
+    private SendMessageData data;
+
+    @JsonProperty("user_id")
     private String userId;
 
-    public MessageSend(String appId, String messageId, String messageType, String data, String createdAt, String userId) {
-        this.appId = appId;
-        this.messageId = messageId;
-        this.messageType = messageType;
-        this.data = data;
-        this.createdAt = createdAt;
-        this.userId = userId;
-    }
+    @JsonProperty("created_at")
+    private String createdAt;
 
-    public MessageSend() {
-        this(null, null, null, null, null, null);
+    public SendMessage() {
+        super();
     }
 
     public String getAppId() {
@@ -46,20 +50,12 @@ public class MessageSend {
         this.messageType = messageType;
     }
 
-    public String getData() {
+    public SendMessageData getData() {
         return data;
     }
 
-    public void setData(String data) {
+    public void setData(SendMessageData data) {
         this.data = data;
-    }
-
-    public String getCreatedAt() {
-        return createdAt;
-    }
-
-    public void setCreatedAt(String createdAt) {
-        this.createdAt = createdAt;
     }
 
     public String getUserId() {
@@ -70,4 +66,11 @@ public class MessageSend {
         this.userId = userId;
     }
 
+    public String getCreatedAt() {
+        return createdAt;
+    }
+
+    public void setCreatedAt(String createdAt) {
+        this.createdAt = createdAt;
+    }
 }

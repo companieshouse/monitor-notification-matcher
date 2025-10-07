@@ -10,6 +10,7 @@ import org.springframework.messaging.Message;
 import org.springframework.messaging.support.MessageBuilder;
 import uk.gov.companieshouse.api.company.CompanyDetails;
 import uk.gov.companieshouse.monitornotification.matcher.model.EmailDocument;
+import uk.gov.companieshouse.monitornotification.matcher.model.SendMessageData;
 import uk.gov.companieshouse.monitornotification.matcher.serdes.GenericSerializer;
 
 public class NotificationMatchTestUtils {
@@ -176,25 +177,28 @@ public class NotificationMatchTestUtils {
         return companyDetails;
     }
 
-    public static EmailDocument<Map<String, Object>> buildValidEmailDocument(Boolean isDelete) {
+    public static EmailDocument<SendMessageData> buildValidEmailDocument(Boolean isDelete) {
         CompanyDetails details = buildCompanyDetails();
 
-        Map<String, Object> dataMap = new TreeMap<>();
-        dataMap.put("CompanyName", details.getCompanyName());
-        dataMap.put("CompanyNumber", details.getCompanyNumber());
-        dataMap.put("IsDelete", isDelete);
-        dataMap.put("MonitorURL", MONITOR_URL);
-        dataMap.put("ChsURL", CHS_URL);
-        dataMap.put("from", "Companies House <noreply@companieshouse.gov.uk>");
-        dataMap.put("subject", format("Company number %s %s", details.getCompanyNumber(), details.getCompanyName()));
+        SendMessageData data = new SendMessageData();
+        //data.setCompanyName(details.getCompanyName());
+        data.setCompanyNumber(details.getCompanyNumber());
+        data.setFilingType("AP01");
+        data.setFilingDescription("appoint-person-director-company-with-name-date");
+        data.setFilingDate("2025-02-04");
+        data.setDelete(isDelete);
+        //data.setChsUrl(CHS_URL);
+        data.setMonitorUrl(MONITOR_URL);
+        data.setFrom("Companies House <noreply@companieshouse.gov.uk>");
+        data.setSubject("Company number %s %s".formatted(details.getCompanyNumber(), details.getCompanyName()));
 
-        return EmailDocument.<Map<String, Object>>builder()
+        return EmailDocument.<SendMessageData>builder()
                 .withAppId("monitor-notification-matcher.filing")
                 .withMessageId(UUID.randomUUID().toString())
                 .withMessageType("monitor_email")
                 .withCreatedAt(NOTIFIED_AT)
                 .withRecipientEmailAddress(null)
-                .withData(dataMap)
+                .withData(data)
                 .build();
     }
 }

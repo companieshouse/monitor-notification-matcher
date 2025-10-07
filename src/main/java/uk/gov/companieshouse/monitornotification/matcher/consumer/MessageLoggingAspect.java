@@ -12,6 +12,7 @@ import org.springframework.messaging.MessageHeaders;
 import org.springframework.stereotype.Component;
 import uk.gov.companieshouse.logging.Logger;
 import uk.gov.companieshouse.logging.util.DataMap;
+import uk.gov.companieshouse.monitornotification.matcher.logging.DataMapHolder;
 
 /**
  * Logs message details before and after it has been processed by
@@ -64,6 +65,8 @@ public class MessageLoggingAspect {
                 .kafkaMessage(incomingMessage.getPayload().toString())
                 .requestId(correlationId)
                 .build();
+
+        DataMapHolder.initialise(correlationId);
 
         logger.debug(logMessage, dataMap.getLogMap());
     }

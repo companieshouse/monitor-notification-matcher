@@ -32,10 +32,11 @@ public class ApiClientConfig {
         logger.trace("internalApiClientSupplier(url=%s) method called.".formatted(internalApiUrl));
 
         return () -> {
-            InternalApiClient internalApiClient = new InternalApiClient(new ApiKeyHttpClient(internalApiKey));
-            internalApiClient.setInternalBasePath(internalApiUrl);
+            InternalApiClient client = new InternalApiClient(new ApiKeyHttpClient(internalApiKey));
+            client.setBasePath(internalApiUrl); // CHS Kafka API
+            client.setInternalBasePath(internalApiUrl); // Company Profile API
 
-            return internalApiClient;
+            return client;
         };
     }
 }

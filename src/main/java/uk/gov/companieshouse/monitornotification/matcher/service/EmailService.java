@@ -2,13 +2,20 @@ package uk.gov.companieshouse.monitornotification.matcher.service;
 
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
+import java.util.Optional;
+import java.util.UUID;
 import java.util.function.Supplier;
 import org.springframework.stereotype.Service;
 import uk.gov.companieshouse.api.InternalApiClient;
+import uk.gov.companieshouse.api.error.ApiErrorResponseException;
+import uk.gov.companieshouse.api.model.ApiResponse;
 import uk.gov.companieshouse.logging.Logger;
+import uk.gov.companieshouse.monitornotification.matcher.converter.MessageSendConverter;
 import uk.gov.companieshouse.monitornotification.matcher.exception.NonRetryableException;
+import uk.gov.companieshouse.monitornotification.matcher.logging.DataMapHolder;
 import uk.gov.companieshouse.monitornotification.matcher.model.EmailDocument;
-import uk.gov.companieshouse.monitornotification.matcher.model.MessageSend;
+import uk.gov.companieshouse.monitornotification.matcher.model.SendMessage;
+import uk.gov.companieshouse.monitornotification.matcher.model.SendMessageData;
 import uk.gov.companieshouse.monitornotification.matcher.repository.MonitorMatchesRepository;
 import uk.gov.companieshouse.monitornotification.matcher.repository.model.MonitorMatchDocument;
 
@@ -50,31 +57,49 @@ public class EmailService {
         }
     }
 
-    public void sendEmail(final EmailDocument<?> document, final String userId) {
+    public ApiResponse<Void> sendEmail(final EmailDocument<SendMessageData> document, final String userId) {
         logger.trace("sendEmail(document=%s, userId=%s) method called.".formatted(document, userId));
-
-        Supplier<MessageSend> messageSend = createMessageSend(document, userId);
-    }
-
-    private Supplier<MessageSend> createMessageSend(final EmailDocument<?> document, final String userId) {
-        logger.trace("createMessageSendPayload(document=%s, userId=%s) method called.".formatted(document, userId));
         try {
-            var jsonData = mapper.writeValueAsString(document.getData());
+            Supplier<SendMessage> sendMessageSupplier = createMessage(document, userId);
+            SendMessage sendMessage = sendMessageSupplier.get();
 
-            return () -> {
-                MessageSend email = new MessageSend();
-                email.setAppId(document.getAppId());
-                email.setMessageId(document.getMessageId());
-                email.setMessageType(document.getMessageType());
-                email.setData(jsonData);
-                email.setCreatedAt(document.getCreatedAt());
-                email.setUserId(userId);
-                return email;
-            };
+            var requestId = Optional.ofNullable(DataMapHolder.getRequestId()).orElse(UUID.randomUUID().toString());
 
-        } catch(JsonProcessingException ex) {
-            logger.error("Failed to serialize email data: %s".formatted(ex.getMessage()));
-            throw new NonRetryableException("Failed to serialize email data", ex);
+            var apiClient = supplier.get();
+            apiClient.getHttpClient().setRequestId(requestId);
+
+            var converter = new MessageSendConverter(mapper, logger);
+            var messageSend = converter.convert(sendMessage);
+
+            var messageHandler = apiClient.messageSendHandler();
+            var messagePost = messageHandler.postMessageSend("/message-send", messageSend);
+
+            ApiResponse<Void> response = messagePost.execute();
+
+            logger.info(String.format("Posted '%s' message to CHS Kafka API (RequestId: %s): (Response %d)",
+                    messageSend.getMessageType(), apiClient.getHttpClient().getRequestId(), response.getStatusCode()));
+
+            return response;
+
+        } catch (ApiErrorResponseException ex) {
+            logger.error("An error occurred while attempting to POST to CHS Kafka API: %s".formatted(ex.getMessage()));
+            throw new NonRetryableException(ex.getMessage(), ex);
         }
     }
+
+    private Supplier<SendMessage> createMessage(final EmailDocument<SendMessageData> document, final String userId) {
+        logger.trace("createMessage(document=%s, userId=%s) method called.".formatted(document, userId));
+
+        return () -> {
+            SendMessage message = new SendMessage();
+            message.setAppId(document.getAppId());
+            message.setMessageId(document.getMessageId());
+            message.setMessageType(document.getMessageType());
+            message.setData(document.getData());
+            message.setCreatedAt(document.getCreatedAt());
+            message.setUserId(userId);
+            return message;
+        };
+    }
+
 }

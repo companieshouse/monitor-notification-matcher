@@ -14,9 +14,12 @@ clean:
 
 .PHONY: build
 build:
+	cp -R ./api-enumerations ./src/main/resources
 	mvn versions:set -DnewVersion=$(version) -DgenerateBackupPoms=false
 	mvn package -Dskip.unit.tests=true
 	cp ./target/$(artifact_name)-$(version).jar ./$(artifact_name).jar
+	git submodule update --init
+	git submodule sync
 
 .PHONY: test
 test: test-unit test-integration

@@ -1,22 +1,23 @@
 package uk.gov.companieshouse.monitornotification.matcher.processor;
 
 import static java.lang.Boolean.FALSE;
-import static java.lang.String.format;
 
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
-import java.util.Map;
 import java.util.Optional;
-import java.util.TreeMap;
 import java.util.UUID;
 import monitor.filing;
 import org.springframework.stereotype.Component;
 import uk.gov.companieshouse.api.company.CompanyDetails;
+import uk.gov.companieshouse.api.model.ApiResponse;
 import uk.gov.companieshouse.logging.Logger;
 import uk.gov.companieshouse.monitornotification.matcher.config.properties.ExternalLinksProperties;
 import uk.gov.companieshouse.monitornotification.matcher.exception.NonRetryableException;
+import uk.gov.companieshouse.monitornotification.matcher.logging.DataMapHolder;
 import uk.gov.companieshouse.monitornotification.matcher.model.EmailDocument;
+import uk.gov.companieshouse.monitornotification.matcher.model.FilingHistory;
+import uk.gov.companieshouse.monitornotification.matcher.model.SendMessageData;
 import uk.gov.companieshouse.monitornotification.matcher.service.CompanyService;
 import uk.gov.companieshouse.monitornotification.matcher.service.EmailService;
 
@@ -55,76 +56,144 @@ public class MessageProcessor {
             return;
         }
 
-        logger.debug("Company details found: %s".formatted(companyDetails.get()));
+        FilingHistory filingHistory = createFilingHistory(message);
+        logger.debug("Filing history created: %s".formatted(filingHistory));
 
         // Prepare the email document using the payload and company details.
-        EmailDocument<?> emailDocument = createEmailDocument(message, companyDetails.get());
+        EmailDocument<SendMessageData> emailDocument = createEmailDocument(message, companyDetails.get(), filingHistory);
 
         // Save the email request (document) to the repository.
         emailService.saveMatch(emailDocument, message.getUserId());
 
         // Send the email document to the email service for processing.
-        emailService.sendEmail(emailDocument, message.getUserId());
+        ApiResponse<Void> apiResponse = emailService.sendEmail(emailDocument, message.getUserId());
+        logger.error("Message sent to CHS Kafka API successfully: (Status Code: %d)".formatted(apiResponse.getStatusCode()));
 
     }
 
     private Optional<String> getCompanyNumber(final filing message) {
         logger.trace("getCompanyNumber(message=%s) method called.".formatted(message));
 
-        Optional<JsonNode> node = findDataNode(message, "company_number");
-        if(node.isEmpty()) {
-            logger.info("The message does not contain a valid company_number field.");
+        Optional<JsonNode> companyNumber = getOptionalNodeValue(findDataNode(message), "company_number");
+        return companyNumber.map(JsonNode::asText);
+    }
+
+    private Boolean isDelete(final filing message) {
+        logger.trace("isDelete(message=%s) method called.".formatted(message));
+
+        Optional<JsonNode> isDelete = getOptionalNodeValue(findDataNode(message), "is_delete");
+        return isDelete.map(JsonNode::asBoolean).orElse(FALSE);
+    }
+
+    private String getFilingType(final filing message) {
+        logger.trace("getFilingType(message=%s) method called.".formatted(message));
+
+        JsonNode filingType = getMandatoryNodeValue(findNestedDataNode(message), "type");
+        return filingType.asText();
+    }
+
+    private String getFilingDescription(final filing message) {
+        logger.trace("getFilingDescription(message=%s) method called.".formatted(message));
+
+        JsonNode filingType = getMandatoryNodeValue(findNestedDataNode(message), "description");
+        return filingType.asText();
+    }
+
+    private String getFilingDate(final filing message) {
+        logger.trace("getFilingDescription(message=%s) method called.".formatted(message));
+
+        JsonNode filingType = getMandatoryNodeValue(findNestedDataNode(message), "date");
+        return filingType.asText();
+    }
+
+    private Optional<JsonNode> getOptionalNodeValue(final JsonNode node, final String attribute) {
+        logger.trace("getOptionalNodeValue(node=%s, nodeName=%s) method called.".formatted(node, attribute));
+
+        if(node == null || !node.has(attribute)) {
+            logger.debug("The given node does not contain a valid '%s' attribute!".formatted(attribute));
             return Optional.empty();
         }
-        return Optional.ofNullable(node.get().asText());
+
+        return Optional.ofNullable(node.get(attribute));
     }
 
-    private Boolean isDeleteRequest(final filing message) {
-        logger.trace("isDeleteRequest(message=%s) method called.".formatted(message));
+    private JsonNode getMandatoryNodeValue(final JsonNode node, final String attribute) throws IllegalArgumentException {
+        logger.trace("getMandatoryNodeValue(node=%s, nodeName=%s) method called.".formatted(node, attribute));
 
-        Optional<JsonNode> node = findDataNode(message, "is_delete");
-        if(node.isEmpty()) {
-            logger.info("The message does not contain a valid is_delete field (defaulting to FALSE).");
-            return FALSE;
+        if(node == null || !node.has(attribute)) {
+            logger.info("The given node does not contain a valid '%s' node!".formatted(attribute));
+            throw new IllegalArgumentException("Supplied node does not contain a valid '%s' node!".formatted(attribute));
         }
-        return node.get().asBoolean(FALSE);
+
+        return node.get(attribute);
     }
 
-    private Optional<JsonNode> findDataNode(final filing message, final String nodeName) {
-        logger.trace("findDataNode(nodeName=%s) method called.".formatted(nodeName));
+    private JsonNode findNestedDataNode(final filing message) {
+        logger.trace("findNestedDataNode(message=%s) method called.".formatted(message));
         try {
-            JsonNode root = objectMapper.readTree(message.getData());
-            JsonNode node = root.get(nodeName);
+            JsonNode dataNode = findDataNode(message).get("data");
 
-            logger.debug("Search for Node(%s), returned result: %s".formatted(nodeName, node));
+            if(dataNode == null || dataNode.isEmpty()) {
+                logger.debug("No nested 'data' node found in message payload, result was: %s".formatted(dataNode));
+                throw new IllegalArgumentException("No nested 'data' node found in message payload!");
+            }
 
-            return Optional.ofNullable(node);
+            return dataNode;
+
+        } catch (IllegalArgumentException e) {
+            logger.error("An error occurred while attempting to extract the JsonNode: %s".formatted("data"), e);
+            throw new NonRetryableException("An error occurred while attempting to extract the JsonNode: %s".formatted("data"), e);
+        }
+    }
+
+    private JsonNode findDataNode(final filing message) {
+        logger.trace("findDataNode(message=%s) method called.".formatted(message));
+        try {
+            return objectMapper.readTree(message.getData());
 
         } catch (JsonProcessingException e) {
-            logger.error("An error occurred while attempting to extract the JsonNode: %s".formatted(nodeName), e);
-            throw new NonRetryableException("An error occurred while attempting to extract the JsonNode: %s".formatted(nodeName), e);
+            logger.error("An error occurred while attempting to extract the JsonNode: %s".formatted("data"), e);
+            throw new NonRetryableException("An error occurred while attempting to extract the JsonNode: %s".formatted("data"), e);
         }
     }
 
-    private EmailDocument<?> createEmailDocument(final filing message, final CompanyDetails details) {
-        logger.trace("createEmailDocument(message=%s, details=%s) method called.".formatted(message, details));
+    private FilingHistory createFilingHistory(final filing message) {
+        logger.trace("createFilingHistory(message=%s) method called.".formatted(message));
 
-        Map<String, Object> dataMap = new TreeMap<>();
-        dataMap.put("CompanyName", details.getCompanyName());
-        dataMap.put("CompanyNumber", details.getCompanyNumber());
-        dataMap.put("IsDelete", isDeleteRequest(message));
-        dataMap.put("MonitorURL", properties.getMonitorUrl());
-        dataMap.put("ChsURL", properties.getChsUrl());
-        dataMap.put("from", "Companies House <noreply@companieshouse.gov.uk>");
-        dataMap.put("subject", format("Company number %s %s", details.getCompanyNumber(), details.getCompanyName()));
+        String type = getFilingType(message);
+        String description = getFilingDescription(message);
+        String date = getFilingDate(message);
 
-        return EmailDocument.<Map<String, Object>>builder()
+        return new FilingHistory(type, description, date);
+    }
+
+    private EmailDocument<SendMessageData> createEmailDocument(final filing message, final CompanyDetails details, final FilingHistory history) {
+        logger.trace("createEmailDocument(message=%s, details=%s, history=%s) method called."
+                .formatted(message, details, history));
+
+        // Maintain the correlation ID if one exists, otherwise generate a new one.
+        var messageId = Optional.ofNullable(DataMapHolder.getRequestId()).orElse(UUID.randomUUID().toString());
+
+        // Prepare the email data payload.
+        SendMessageData data = new SendMessageData();
+        data.setCompanyNumber(details.getCompanyNumber());
+        //data.setCompanyName(details.getCompanyName());
+        data.setFilingDate(history.getDate());
+        data.setFilingDescription(history.getDescription());
+        data.setFilingType(history.getType());
+        data.setDelete(isDelete(message));
+        data.setMonitorUrl(properties.getMonitorUrl());
+        //data.setChsUrl(properties.getChsUrl());
+        data.setFrom("Companies House <noreply@companieshouse.gov.uk>");
+        data.setSubject("Company number %s %s".formatted(details.getCompanyNumber(), details.getCompanyName()));
+
+        return EmailDocument.<SendMessageData>builder()
                 .withAppId("monitor-notification-matcher.filing")
-                .withMessageId(UUID.randomUUID().toString())
+                .withMessageId(messageId)
                 .withMessageType("monitor_email")
                 .withCreatedAt(message.getNotifiedAt())
                 .withRecipientEmailAddress(null)
-                .withData(dataMap)
+                .withData(data)
                 .build();
     }
 }
