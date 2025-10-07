@@ -19,7 +19,7 @@ terraform {
 }
 
 module "secrets" {
-  source = "git@github.com:companieshouse/terraform-modules//aws/ecs/secrets?ref=1.0.324"
+  source = "git@github.com:companieshouse/terraform-modules//aws/ecs/secrets?ref=1.0.349"
 
   name_prefix = "${local.service_name}-${var.environment}"
   environment = var.environment
@@ -28,7 +28,7 @@ module "secrets" {
 }
 
 module "ecs-service" {
-  source = "git@github.com:companieshouse/terraform-modules//aws/ecs/ecs-service?ref=1.0.324"
+  source = "git@github.com:companieshouse/terraform-modules//aws/ecs/ecs-service?ref=1.0.349"
 
   # Environmental configuration
   environment             = var.environment
@@ -79,7 +79,7 @@ module "ecs-service" {
 
 module "ecs-service-kafka-v2" {
   count  = var.environment == "cidev" ? 1 : 0
-  source = "git@github.com:companieshouse/terraform-modules//aws/ecs/ecs-service?ref=1.0.324"
+  source = "git@github.com:companieshouse/terraform-modules//aws/ecs/ecs-service?ref=1.0.349"
 
   # Environmental configuration
   environment             = var.environment
