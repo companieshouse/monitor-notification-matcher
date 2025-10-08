@@ -79,7 +79,7 @@ public class FilingHistoryDescriptionsEnumerationsHelperTest {
             JsonNode node = root.get(nodeName);
             return Optional.ofNullable(node);
         } catch (JsonProcessingException e) {
-            return Optional.ofNullable(null);
+            return Optional.empty();
         }
     }
 }
