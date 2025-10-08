@@ -13,7 +13,6 @@ import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.times;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
-import static uk.gov.companieshouse.monitornotification.matcher.util.NotificationMatchTestUtils.USER_ID;
 import static uk.gov.companieshouse.monitornotification.matcher.util.NotificationMatchTestUtils.buildValidEmailDocument;
 
 import com.fasterxml.jackson.core.JsonProcessingException;
@@ -34,8 +33,6 @@ import uk.gov.companieshouse.api.http.HttpClient;
 import uk.gov.companieshouse.api.model.ApiResponse;
 import uk.gov.companieshouse.logging.Logger;
 import uk.gov.companieshouse.monitornotification.matcher.exception.NonRetryableException;
-import uk.gov.companieshouse.monitornotification.matcher.model.EmailDocument;
-import uk.gov.companieshouse.monitornotification.matcher.model.SendMessageData;
 import uk.gov.companieshouse.monitornotification.matcher.repository.MonitorMatchesRepository;
 
 @ExtendWith(MockitoExtension.class)
@@ -73,11 +70,11 @@ public class EmailServiceTest {
         when(handler.postMessageSend(eq("/message-send"), any(MessageSend.class))).thenReturn(poster);
         when(poster.execute()).thenReturn(new ApiResponse<>(200, Map.of(), null));
 
-        EmailDocument<SendMessageData> document = buildValidEmailDocument(TRUE);
+        MessageSend document = buildValidEmailDocument(TRUE);
 
-        underTest.sendEmail(document, USER_ID);
+        underTest.sendEmail(document);
 
-        verify(logger, times(2)).trace(anyString());
+        verify(logger, times(1)).trace(anyString());
         verify(supplier, times(1)).get();
 
         verify(client, times(2)).getHttpClient();
@@ -89,20 +86,20 @@ public class EmailServiceTest {
 
     @Test
     public void givenValidDocument_whenSaveMatchCalled_thenSuccess() {
-        EmailDocument<SendMessageData> document = buildValidEmailDocument(TRUE);
+        MessageSend document = buildValidEmailDocument(TRUE);
 
-        underTest.saveMatch(document, USER_ID);
+        underTest.saveMatch(document);
 
         verify(logger, times(1)).trace(anyString());
     }
 
     @Test
     public void givenInvalidDocument_whenSaveMatchCalled_thenParseExceptionRaised() throws JsonProcessingException {
-        EmailDocument<SendMessageData> document = buildValidEmailDocument(FALSE);
+        MessageSend document = buildValidEmailDocument(FALSE);
         when(mapper.writeValueAsString(document.getData())).thenThrow(JsonProcessingException.class);
 
         NonRetryableException expectedException = assertThrows(NonRetryableException.class, () -> {
-            underTest.saveMatch(document, USER_ID);
+            underTest.saveMatch(document);
         });
 
         verify(logger, times(1)).trace(anyString());
@@ -114,21 +111,4 @@ public class EmailServiceTest {
         assertThat(expectedException.getCause().getClass(), is(JsonProcessingException.class));
     }
 
-    @Test
-    public void givenInvalidDocument_whenSendEmailCalled_thenParseExceptionRaised() throws JsonProcessingException {
-        EmailDocument<SendMessageData> document = buildValidEmailDocument(FALSE);
-        when(mapper.writeValueAsString(document.getData())).thenThrow(JsonProcessingException.class);
-
-        NonRetryableException expectedException = assertThrows(NonRetryableException.class, () -> {
-            underTest.sendEmail(document, USER_ID);
-        });
-
-        verify(logger, times(2)).trace(anyString());
-        verify(mapper, times(1)).writeValueAsString(document.getData());
-        verify(logger, times(1)).error(anyString());
-
-        assertThat(expectedException, is(notNullValue()));
-        assertThat(expectedException.getMessage(), is("Failed to serialize email data"));
-        assertThat(expectedException.getCause().getClass(), is(JsonProcessingException.class));
-    }
 }

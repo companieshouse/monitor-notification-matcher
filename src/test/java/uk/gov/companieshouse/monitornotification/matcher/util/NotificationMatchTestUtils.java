@@ -1,16 +1,12 @@
 package uk.gov.companieshouse.monitornotification.matcher.util;
 
-import static java.lang.String.format;
-
-import java.util.Map;
-import java.util.TreeMap;
-import java.util.UUID;
 import monitor.filing;
 import org.springframework.messaging.Message;
 import org.springframework.messaging.support.MessageBuilder;
+import uk.gov.companieshouse.api.chskafka.MessageSend;
+import uk.gov.companieshouse.api.chskafka.MessageSendData;
 import uk.gov.companieshouse.api.company.CompanyDetails;
-import uk.gov.companieshouse.monitornotification.matcher.model.EmailDocument;
-import uk.gov.companieshouse.monitornotification.matcher.model.SendMessageData;
+import uk.gov.companieshouse.monitornotification.matcher.model.FilingHistory;
 import uk.gov.companieshouse.monitornotification.matcher.serdes.GenericSerializer;
 
 public class NotificationMatchTestUtils {
@@ -177,28 +173,40 @@ public class NotificationMatchTestUtils {
         return companyDetails;
     }
 
-    public static EmailDocument<SendMessageData> buildValidEmailDocument(Boolean isDelete) {
-        CompanyDetails details = buildCompanyDetails();
+    public static FilingHistory buildFilingHistory() {
+        FilingHistory filingHistory = new FilingHistory();
+        filingHistory.setDate("2025-02-04");
+        filingHistory.setDescription("appoint-person-director-company-with-name-date");
+        filingHistory.setType("AP01");
+        return filingHistory;
+    }
 
-        SendMessageData data = new SendMessageData();
-        //data.setCompanyName(details.getCompanyName());
-        data.setCompanyNumber(details.getCompanyNumber());
-        data.setFilingType("AP01");
-        data.setFilingDescription("appoint-person-director-company-with-name-date");
-        data.setFilingDate("2025-02-04");
-        data.setDelete(isDelete);
-        //data.setChsUrl(CHS_URL);
-        data.setMonitorUrl(MONITOR_URL);
+    public static MessageSend buildValidEmailDocument(Boolean isDelete) {
+        CompanyDetails companyDetails = buildCompanyDetails();
+        FilingHistory filingHistory = buildFilingHistory();
+
+        MessageSend message = new MessageSend();
+        message.setAppId("monitor-notification-matcher.filing");
+        message.setMessageId("");
+        message.setMessageType("monitor_email");
+
+        MessageSendData data = new MessageSendData();
+        data.setCompanyNumber(companyDetails.getCompanyNumber());
+        data.setCompanyName(companyDetails.getCompanyName());
+        data.setFilingDate(filingHistory.getDate());
+        data.setFilingDescription(filingHistory.getDescription());
+        data.setFilingType(filingHistory.getType());
+        data.setIsDelete(isDelete);
+        data.setChsURL(CHS_URL);
+        data.setMonitorURL(MONITOR_URL);
         data.setFrom("Companies House <noreply@companieshouse.gov.uk>");
-        data.setSubject("Company number %s %s".formatted(details.getCompanyNumber(), details.getCompanyName()));
+        data.setSubject("Company number %s %s".formatted(
+                companyDetails.getCompanyNumber(), companyDetails.getCompanyName()));
 
-        return EmailDocument.<SendMessageData>builder()
-                .withAppId("monitor-notification-matcher.filing")
-                .withMessageId(UUID.randomUUID().toString())
-                .withMessageType("monitor_email")
-                .withCreatedAt(NOTIFIED_AT)
-                .withRecipientEmailAddress(null)
-                .withData(data)
-                .build();
+        message.setData(data);
+        message.setUserId(USER_ID);
+        message.setCreatedAt(NOTIFIED_AT);
+
+        return message;
     }
 }

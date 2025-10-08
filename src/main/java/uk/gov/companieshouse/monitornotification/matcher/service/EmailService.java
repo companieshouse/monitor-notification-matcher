@@ -7,15 +7,12 @@ import java.util.UUID;
 import java.util.function.Supplier;
 import org.springframework.stereotype.Service;
 import uk.gov.companieshouse.api.InternalApiClient;
+import uk.gov.companieshouse.api.chskafka.MessageSend;
 import uk.gov.companieshouse.api.error.ApiErrorResponseException;
 import uk.gov.companieshouse.api.model.ApiResponse;
 import uk.gov.companieshouse.logging.Logger;
-import uk.gov.companieshouse.monitornotification.matcher.converter.MessageSendConverter;
 import uk.gov.companieshouse.monitornotification.matcher.exception.NonRetryableException;
 import uk.gov.companieshouse.monitornotification.matcher.logging.DataMapHolder;
-import uk.gov.companieshouse.monitornotification.matcher.model.EmailDocument;
-import uk.gov.companieshouse.monitornotification.matcher.model.SendMessage;
-import uk.gov.companieshouse.monitornotification.matcher.model.SendMessageData;
 import uk.gov.companieshouse.monitornotification.matcher.repository.MonitorMatchesRepository;
 import uk.gov.companieshouse.monitornotification.matcher.repository.model.MonitorMatchDocument;
 
@@ -35,21 +32,21 @@ public class EmailService {
         this.logger = logger;
     }
 
-    public void saveMatch(final EmailDocument<?> document, final String userId) {
-        logger.trace("saveMatch(document=%s, userId=%s) method called.".formatted(document, userId));
+    public void saveMatch(final MessageSend message) {
+        logger.trace("saveMatch(message=%s) method called.".formatted(message));
         try {
-            var jsonData = mapper.writeValueAsString(document.getData());
+            var jsonData = mapper.writeValueAsString(message.getData());
 
-            MonitorMatchDocument email = new MonitorMatchDocument();
-            email.setAppId(document.getAppId());
-            email.setMessageId(document.getMessageId());
-            email.setMessageType(document.getMessageType());
-            email.setData(jsonData);
-            email.setCreatedAt(document.getCreatedAt());
-            email.setUserId(userId);
+            MonitorMatchDocument document = new MonitorMatchDocument();
+            document.setAppId(message.getAppId());
+            document.setMessageId(message.getMessageId());
+            document.setMessageType(message.getMessageType());
+            document.setData(jsonData);
+            document.setCreatedAt(message.getCreatedAt());
+            document.setUserId(document.getUserId());
 
             // Save the model to the mongo matches collection.
-            repository.save(email);
+            repository.save(document);
 
         } catch(JsonProcessingException ex) {
             logger.error("Failed to serialize email data: %s".formatted(ex.getMessage()));
@@ -57,27 +54,21 @@ public class EmailService {
         }
     }
 
-    public ApiResponse<Void> sendEmail(final EmailDocument<SendMessageData> document, final String userId) {
-        logger.trace("sendEmail(document=%s, userId=%s) method called.".formatted(document, userId));
+    public ApiResponse<Void> sendEmail(final MessageSend message) {
+        logger.trace("sendEmail(message=%s) method called.".formatted(message));
         try {
-            Supplier<SendMessage> sendMessageSupplier = createMessage(document, userId);
-            SendMessage sendMessage = sendMessageSupplier.get();
-
             var requestId = Optional.ofNullable(DataMapHolder.getRequestId()).orElse(UUID.randomUUID().toString());
 
             var apiClient = supplier.get();
             apiClient.getHttpClient().setRequestId(requestId);
 
-            var converter = new MessageSendConverter(mapper, logger);
-            var messageSend = converter.convert(sendMessage);
-
             var messageHandler = apiClient.messageSendHandler();
-            var messagePost = messageHandler.postMessageSend("/message-send", messageSend);
+            var messagePost = messageHandler.postMessageSend("/message-send", message);
 
             ApiResponse<Void> response = messagePost.execute();
 
             logger.info(String.format("Posted '%s' message to CHS Kafka API (RequestId: %s): (Response %d)",
-                    messageSend.getMessageType(), apiClient.getHttpClient().getRequestId(), response.getStatusCode()));
+                    message.getMessageType(), apiClient.getHttpClient().getRequestId(), response.getStatusCode()));
 
             return response;
 
@@ -86,20 +77,4 @@ public class EmailService {
             throw new NonRetryableException(ex.getMessage(), ex);
         }
     }
-
-    private Supplier<SendMessage> createMessage(final EmailDocument<SendMessageData> document, final String userId) {
-        logger.trace("createMessage(document=%s, userId=%s) method called.".formatted(document, userId));
-
-        return () -> {
-            SendMessage message = new SendMessage();
-            message.setAppId(document.getAppId());
-            message.setMessageId(document.getMessageId());
-            message.setMessageType(document.getMessageType());
-            message.setData(document.getData());
-            message.setCreatedAt(document.getCreatedAt());
-            message.setUserId(userId);
-            return message;
-        };
-    }
-
 }
