@@ -19,6 +19,7 @@ import static uk.gov.companieshouse.monitornotification.matcher.util.Notificatio
 import static uk.gov.companieshouse.monitornotification.matcher.util.NotificationMatchTestUtils.buildFilingDeleteMessageWithoutCompanyNumber;
 import static uk.gov.companieshouse.monitornotification.matcher.util.NotificationMatchTestUtils.buildFilingDeleteMessageWithoutIsDelete;
 import static uk.gov.companieshouse.monitornotification.matcher.util.NotificationMatchTestUtils.buildFilingUpdateMessage;
+import static uk.gov.companieshouse.monitornotification.matcher.util.NotificationMatchTestUtils.buildFilingUpdateWithLegacyDescriptionMessage;
 
 import com.fasterxml.jackson.core.JsonParseException;
 import com.fasterxml.jackson.databind.ObjectMapper;
@@ -129,9 +130,9 @@ public class MessageProcessorTest {
 
         underTest.processMessage(payload);
 
-        verify(logger, times(7)).trace(anyString());
+        verify(logger, times(10)).trace(anyString());
         verify(logger, times(1)).info("The message does not contain a valid is_delete field (defaulting to FALSE).");
-        verify(logger, times(4)).debug(anyString());
+        verify(logger, times(5)).debug(anyString());
         verify(companyService, times(1)).findCompanyDetails(COMPANY_NUMBER);
         verify(emailService, times(1)).saveMatch(any(EmailDocument.class), eq(USER_ID));
         verify(emailService, times(1)).sendEmail(any(EmailDocument.class));
@@ -151,6 +152,27 @@ public class MessageProcessorTest {
         assertThat(expectedException, is(notNullValue()));
         assertThat(expectedException.getMessage(), is("An error occurred while attempting to extract the JsonNode: company_number"));
         assertThat(expectedException.getCause().getClass(), is(JsonParseException.class));
+    }
+
+    @Test
+    void givenValidPayloadWithLegacyDescriptionInDataObject_whenMessageProcessed_thenProcessedOK() {
+        Message<filing> message = buildFilingUpdateWithLegacyDescriptionMessage();
+        filing payload = message.getPayload();
+
+        CompanyDetails companyDetails = new CompanyDetails();
+        companyDetails.setCompanyNumber(COMPANY_NUMBER);
+        companyDetails.setCompanyName(COMPANY_NAME);
+        companyDetails.setCompanyStatus(COMPANY_STATUS);
+
+        when(companyService.findCompanyDetails(COMPANY_NUMBER)).thenReturn(Optional.of(companyDetails));
+
+        underTest.processMessage(payload);
+
+        verify(logger, times(10)).trace(anyString());
+        verify(logger, times(5)).debug(anyString());
+        verify(companyService, times(1)).findCompanyDetails(COMPANY_NUMBER);
+        verify(emailService, times(1)).saveMatch(any(EmailDocument.class), eq(USER_ID));
+        verify(emailService, times(1)).sendEmail(any(EmailDocument.class));
     }
 
 }

@@ -22,7 +22,7 @@ import java.nio.file.Files;
 import java.nio.file.Path;
 
 @ExtendWith(MockitoExtension.class)
-public class FileHelperTest {
+class FileHelperTest {
     @TempDir
     private Path tempDir;
 

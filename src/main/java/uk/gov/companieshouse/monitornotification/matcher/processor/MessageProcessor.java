@@ -33,6 +33,9 @@ public class MessageProcessor {
     private final ExternalLinksProperties properties;
     private final FilingHistoryDescriptionsEnumerationsHelper filingHistoryDescriptionsEnumerationsHelper;
 
+    private static final String DATA_NODE_EXTRACTION_ERROR = "An error occurred while attempting to extract the JsonNode from nested data node: %s";
+    private static final String DESCRIPTION_NODE_KEY = "description";
+
     public MessageProcessor(final EmailService emailService, final CompanyService companyService, final ObjectMapper objectMapper, final Logger logger, final ExternalLinksProperties properties, final FilingHistoryDescriptionsEnumerationsHelper filingHistoryDescriptionsEnumerationsHelper) {
         this.emailService = emailService;
         this.companyService = companyService;
@@ -110,6 +113,22 @@ public class MessageProcessor {
         }
     }
 
+    private Optional<JsonNode> findDescriptionHistoryDataNode(final filing message, final String nodeName) {
+        logger.trace("findDescriptionHistoryDataNode(nodeName=%s) method called.".formatted(nodeName));
+        try {
+            Optional<JsonNode> root = findDataNode(message, "data");
+            // return if data node not found
+            if (!root.isPresent()) {
+                return Optional.empty();
+            }
+            JsonNode node = root.get();
+            return Optional.ofNullable(node.get(nodeName));
+        } catch (NonRetryableException e) {
+            logger.error(DATA_NODE_EXTRACTION_ERROR.formatted(nodeName), e);
+            throw new NonRetryableException(DATA_NODE_EXTRACTION_ERROR.formatted(nodeName), e);
+        }
+    }
+
     private EmailDocument<?> createEmailDocument(final filing message, final CompanyDetails details) {
         logger.trace("createEmailDocument(message=%s, details=%s) method called.".formatted(message, details));
 
@@ -124,20 +143,20 @@ public class MessageProcessor {
         dataMap.put("FilingType", message.getKind());
         dataMap.put("FilingDate", message.getNotifiedAt());
         // set 'FilingDescription' to relevant value(s)
-        Optional<JsonNode> descriptionNode = findDataNode(message, "description");
-        if (!descriptionNode.isEmpty()) {
-            Optional<JsonNode> descriptionValuesNode = findDataNode(message, "description_values");
-            if (descriptionNode.get().asText().equals("legacy")) {
-                if (!descriptionValuesNode.get().asText().equals("")) {
-                    dataMap.put("FilingDescription", descriptionValuesNode.get().asText());
-                }
+        Optional<JsonNode> descriptionNode = findDescriptionHistoryDataNode(message, DESCRIPTION_NODE_KEY);
+        if (descriptionNode.isPresent()) {
+            Optional<JsonNode> descriptionValuesNode = findDescriptionHistoryDataNode(message, "description_values");
+            if (descriptionNode.get().asText().equals("legacy") && descriptionValuesNode.isPresent() && !descriptionValuesNode.get().get(DESCRIPTION_NODE_KEY).isNull()) {
+                dataMap.put("FilingDescription", descriptionValuesNode.get().get(DESCRIPTION_NODE_KEY).asText());
             } else {
                 try {
-                    String filingDescription = filingHistoryDescriptionsEnumerationsHelper.getFilingHistoryDescription(
-                        descriptionNode.get().asText(),
-                        descriptionValuesNode
-                    );
-                    dataMap.put("FilingDescription", filingDescription);
+                    if (descriptionValuesNode.isPresent()) {
+                        String filingDescription = filingHistoryDescriptionsEnumerationsHelper.getFilingHistoryDescription(
+                            descriptionNode.get().asText(),
+                            descriptionValuesNode.get()
+                        );
+                        dataMap.put("FilingDescription", filingDescription);
+                    }
                 } catch(IOException e){
                     logger.error("An error occurred while attempting to format enumeration: %s".formatted(descriptionNode.get().asText()), e);
                 }

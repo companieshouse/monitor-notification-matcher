@@ -29,7 +29,7 @@ public class FileHelper {
 	 */
     public InputStream loadFile(String path) throws FileNotFoundException {
         logger.trace("loadFile(path=%s) method called.".formatted(path));
-        File fileDescriptionsFile = new File(path);
+        var fileDescriptionsFile = new File(path);
 
         if(fileDescriptionsFile.exists()) {
             return new FileInputStream(fileDescriptionsFile);
