@@ -109,7 +109,7 @@ variable "cloudwatch_alarms_enabled" {
 }
 
 # ------------------------------------------------------------------------------
-# Service environment variable configs
+# Service environment variable configs 
 # ------------------------------------------------------------------------------
 variable "ssm_version_prefix" {
   type        = string
