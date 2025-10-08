@@ -48,7 +48,7 @@ module "ecs-service" {
   # Docker container details
   docker_registry   = var.docker_registry
   docker_repo       = local.docker_repo
-  container_version = var.chs_monitor_notification_matcher_version
+  container_version = var.monitor_notification_matcher_version
   container_port    = local.container_port
 
   # Service configuration
@@ -99,7 +99,7 @@ module "ecs-service-kafka-v2" {
   # Docker container details
   docker_registry   = var.docker_registry
   docker_repo       = local.docker_repo
-  container_version = var.chs_monitor_notification_matcher_version
+  container_version = var.monitor_notification_matcher_version
   container_port    = local.container_port
 
   # Service configuration
