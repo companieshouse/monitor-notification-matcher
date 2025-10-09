@@ -53,6 +53,29 @@ public class NotificationMatchTestUtils {
             }
             """;
 
+    private static final String NOTIFICATION_MATCH_UPDATE_DATA_LEGACY_DESCRIPTION = """
+            {
+                "app_id": "chs-monitor-notification-matcher.filing",
+                "company_number": "%s",
+                "data": {
+                  "type": "AP01",
+                  "description" : "legacy",
+                  "description_values" : {
+                    "description" : "test description"
+                  },
+                  "links" : {
+                    "self" : "/transactions/158153-915517-386847/officers/67a2396e8e70c90c76a3ba62"
+                  },
+                  "category": "officers",
+                  "paper_filed": false,
+                  "subcategory": "appointments",
+                  "action_date": "2025-02-04",
+                  "date": "2025-02-04"
+                },
+                "is_delete": false
+            }
+            """;
+
     private static final String NOTIFICATION_MATCH_DELETE_DATA = """
             {
                 "app_id": "chs-monitor-notification-matcher.filing",
@@ -159,6 +182,14 @@ public class NotificationMatchTestUtils {
     public static Message<filing> buildFilingDeleteMessageWithBlankCompanyNumber() {
         return MessageBuilder
                 .withPayload(buildFilingWithData(NOTIFICATION_MATCH_DELETE_DATA.formatted("")))
+                .setHeader("kafka_receivedTopic", "test-topic")
+                .setHeader("kafka_offset", 42L)  // optional
+                .build();
+    }
+
+    public static Message<filing> buildFilingUpdateWithLegacyDescriptionMessage() {
+        return MessageBuilder
+                .withPayload(buildFilingWithData(NOTIFICATION_MATCH_UPDATE_DATA_LEGACY_DESCRIPTION.formatted(COMPANY_NUMBER)))
                 .setHeader("kafka_receivedTopic", "test-topic")
                 .setHeader("kafka_offset", 42L)  // optional
                 .build();

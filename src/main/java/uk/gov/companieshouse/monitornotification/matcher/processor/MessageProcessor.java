@@ -110,6 +110,18 @@ public class MessageProcessor {
         }
     }
 
+    private JsonNode findDescriptionHistoryDataNode(final filing message, final String nodeName) {
+        logger.trace("findDescriptionHistoryDataNode(nodeName=%s) method called.".formatted(nodeName));
+        try {
+            Optional<JsonNode> root = findDataNode(message, "data");
+            JsonNode node = root.get();
+            return node.get(nodeName);
+        } catch (NonRetryableException e) {
+            logger.error("An error occurred while attempting to extract the JsonNode: %s".formatted(nodeName), e);
+            throw new NonRetryableException("An error occurred while attempting to extract the JsonNode: %s".formatted(nodeName), e);
+        }
+    }
+
     private EmailDocument<?> createEmailDocument(final filing message, final CompanyDetails details) {
         logger.trace("createEmailDocument(message=%s, details=%s) method called.".formatted(message, details));
 
@@ -124,22 +136,22 @@ public class MessageProcessor {
         dataMap.put("FilingType", message.getKind());
         dataMap.put("FilingDate", message.getNotifiedAt());
         // set 'FilingDescription' to relevant value(s)
-        Optional<JsonNode> descriptionNode = findDataNode(message, "description");
-        if (!descriptionNode.isEmpty()) {
-            Optional<JsonNode> descriptionValuesNode = findDataNode(message, "description_values");
-            if (descriptionNode.get().asText().equals("legacy")) {
-                if (!descriptionValuesNode.get().asText().equals("")) {
-                    dataMap.put("FilingDescription", descriptionValuesNode.get().asText());
+        JsonNode descriptionNode = findDescriptionHistoryDataNode(message, "description");
+        if (!descriptionNode.isNull()) {
+            JsonNode descriptionValuesNode = findDescriptionHistoryDataNode(message, "description_values");
+            if (descriptionNode.asText().equals("legacy")) {
+                if (!descriptionValuesNode.asText().equals("")) {
+                    dataMap.put("FilingDescription", descriptionValuesNode.get("description").asText());
                 }
             } else {
                 try {
                     String filingDescription = filingHistoryDescriptionsEnumerationsHelper.getFilingHistoryDescription(
-                        descriptionNode.get().asText(),
+                        descriptionNode.asText(),
                         descriptionValuesNode
                     );
                     dataMap.put("FilingDescription", filingDescription);
                 } catch(IOException e){
-                    logger.error("An error occurred while attempting to format enumeration: %s".formatted(descriptionNode.get().asText()), e);
+                    logger.error("An error occurred while attempting to format enumeration: %s".formatted(descriptionNode.asText()), e);
                 }
             }
         }

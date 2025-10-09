@@ -7,7 +7,6 @@ import static org.mockito.Mockito.when;
 import java.io.InputStream;
 import java.util.HashMap;
 import java.util.Map;
-import java.util.Optional;
 
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
@@ -72,14 +71,14 @@ public class FilingHistoryDescriptionsEnumerationsHelperTest {
         return descriptions;
     }
 
-    private Optional<JsonNode> findDataNode(final String nodeName) {
+    private JsonNode findDataNode(final String nodeName) {
         try {
             ObjectMapper objectMapper = new ObjectMapper();
             JsonNode root = objectMapper.readTree(DESCRIPTIONS_JSON_BLOB);
             JsonNode node = root.get(nodeName);
-            return Optional.ofNullable(node);
+            return node;
         } catch (JsonProcessingException e) {
-            return Optional.empty();
+            return null;
         }
     }
 }

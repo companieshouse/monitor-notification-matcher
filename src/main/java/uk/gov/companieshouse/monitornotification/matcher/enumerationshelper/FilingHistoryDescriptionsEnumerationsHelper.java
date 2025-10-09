@@ -4,7 +4,6 @@ import java.io.IOException;
 import java.io.InputStream;
 import java.util.HashMap;
 import java.util.Map;
-import java.util.Optional;
 
 import org.apache.commons.lang.text.StrSubstitutor;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -42,7 +41,7 @@ public class FilingHistoryDescriptionsEnumerationsHelper {
      * @throws IOException Exception thrown if an error occurs when accessing the file containing the descriptions
      */
     @SuppressWarnings("unchecked")
-    public String getFilingHistoryDescription(String description, Optional<JsonNode> descriptionValues) throws IOException {
+    public String getFilingHistoryDescription(String description, JsonNode descriptionValues) throws IOException {
         InputStream inputStream = fileHelper.loadFile(FILING_HISTORY_DESCRIPTIONS_FILE_NAME);
         if(inputStream != null) {
             Map<String, Object> filingHistoryDescriptions = (Map<String, Object>)yaml.load(inputStream);
@@ -51,7 +50,7 @@ public class FilingHistoryDescriptionsEnumerationsHelper {
                     String descriptionValue = (String)filingHistoryDescriptions.get(description);
                     descriptionValue = descriptionValue.replaceAll("[**]", "");
                     ObjectMapper objectMapper = new ObjectMapper();
-                    Map<String, Object> descriptionValuesMap = objectMapper.convertValue(descriptionValues.get(), Map.class);
+                    Map<String, Object> descriptionValuesMap = objectMapper.convertValue(descriptionValues, Map.class);
                     return populateParameters(descriptionValue, descriptionValuesMap);
                 } else {
                     Map<String, Object> dataMap = new HashMap<>();
