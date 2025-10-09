@@ -18,6 +18,7 @@ import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.kafka.core.KafkaTemplate;
 import org.springframework.kafka.test.context.EmbeddedKafka;
 import org.springframework.messaging.Message;
+import org.springframework.test.annotation.DirtiesContext;
 import org.springframework.test.context.ActiveProfiles;
 import uk.gov.companieshouse.monitornotification.matcher.consumer.NotificationMatchConsumer;
 
@@ -27,6 +28,7 @@ import uk.gov.companieshouse.monitornotification.matcher.consumer.NotificationMa
         brokerProperties = {"listeners=PLAINTEXT://localhost:9092", "port=9092" }
 )
 @TestInstance(TestInstance.Lifecycle.PER_CLASS)
+@DirtiesContext(classMode = DirtiesContext.ClassMode.AFTER_CLASS)
 @ActiveProfiles("test")
 public class KafkaIntegrationTest {
 
