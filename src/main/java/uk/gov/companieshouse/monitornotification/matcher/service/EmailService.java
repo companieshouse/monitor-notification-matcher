@@ -37,7 +37,7 @@ public class EmailService {
         try {
             var jsonData = mapper.writeValueAsString(message.getData());
 
-            MonitorMatchDocument document = new MonitorMatchDocument();
+            var document = new MonitorMatchDocument();
             document.setAppId(message.getAppId());
             document.setMessageId(message.getMessageId());
             document.setMessageType(message.getMessageType());
