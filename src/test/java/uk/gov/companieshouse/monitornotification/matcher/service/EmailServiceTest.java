@@ -5,6 +5,7 @@ import static java.lang.Boolean.TRUE;
 import static org.hamcrest.MatcherAssert.assertThat;
 import static org.hamcrest.Matchers.is;
 import static org.hamcrest.Matchers.notNullValue;
+import static org.hamcrest.Matchers.nullValue;
 import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.ArgumentMatchers.anyString;
@@ -13,10 +14,12 @@ import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.times;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
-import static uk.gov.companieshouse.monitornotification.matcher.util.NotificationMatchTestUtils.buildValidEmailDocument;
+import static uk.gov.companieshouse.monitornotification.matcher.utils.NotificationMatchTestUtils.buildValidEmailDocument;
 
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
+import com.google.api.client.http.HttpHeaders;
+import com.google.api.client.http.HttpResponseException;
 import java.util.Map;
 import java.util.function.Supplier;
 import org.junit.jupiter.api.BeforeEach;
@@ -83,6 +86,44 @@ public class EmailServiceTest {
         verify(handler, times(1)).postMessageSend(eq("/message-send"), any(MessageSend.class));
         verify(poster, times(1)).execute();
     }
+
+    @Test
+    public void givenValidDocument_whenSendEmailFails_thenRaiseException() throws ApiErrorResponseException {
+        InternalApiClient client = mock(InternalApiClient.class);
+        HttpClient httpClient = mock(HttpClient.class);
+        PrivateMessageSendHandler handler = mock(PrivateMessageSendHandler.class);
+        PrivateMessageSendPost poster = mock(PrivateMessageSendPost.class);
+
+        ApiErrorResponseException exceptionToRaise = ApiErrorResponseException.fromHttpResponseException(
+                new HttpResponseException.Builder(400, "Bad Request", new HttpHeaders()).build()
+        );
+
+        when(supplier.get()).thenReturn(client);
+        when(client.getHttpClient()).thenReturn(httpClient);
+        when(client.messageSendHandler()).thenReturn(handler);
+        when(handler.postMessageSend(eq("/message-send"), any(MessageSend.class))).thenReturn(poster);
+        when(poster.execute()).thenThrow(exceptionToRaise);
+
+        MessageSend document = buildValidEmailDocument(TRUE);
+
+        NonRetryableException expectedException = assertThrows(NonRetryableException.class, () -> {
+            underTest.sendEmail(document);
+        });
+
+        verify(logger, times(1)).trace(anyString());
+        verify(supplier, times(1)).get();
+
+        verify(client, times(1)).getHttpClient();
+        verify(httpClient, times(1)).setRequestId(anyString());
+        verify(client, times(1)).messageSendHandler();
+        verify(handler, times(1)).postMessageSend(eq("/message-send"), any(MessageSend.class));
+        verify(poster, times(1)).execute();
+
+        assertThat(expectedException, is(notNullValue()));
+        assertThat(expectedException.getMessage(), is(nullValue()));
+        assertThat(expectedException.getCause().getClass(), is(ApiErrorResponseException.class));
+    }
+
 
     @Test
     public void givenValidDocument_whenSaveMatchCalled_thenSuccess() {

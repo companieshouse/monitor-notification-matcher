@@ -1,7 +1,7 @@
 package uk.gov.companieshouse.monitornotification.matcher.consumer;
 
 import static org.junit.jupiter.api.Assertions.assertTrue;
-import static uk.gov.companieshouse.monitornotification.matcher.util.NotificationMatchTestUtils.buildFilingUpdateMessage;
+import static uk.gov.companieshouse.monitornotification.matcher.utils.NotificationMatchTestUtils.buildFilingUpdateMessage;
 
 import monitor.filing;
 import org.junit.jupiter.api.Test;
@@ -13,7 +13,7 @@ import org.springframework.boot.test.system.CapturedOutput;
 import org.springframework.boot.test.system.OutputCaptureExtension;
 import org.springframework.messaging.Message;
 import org.springframework.test.context.ActiveProfiles;
-import uk.gov.companieshouse.monitornotification.matcher.util.DisabledIfDockerUnavailable;
+import uk.gov.companieshouse.monitornotification.matcher.utils.DisabledIfDockerUnavailable;
 
 @ExtendWith(OutputCaptureExtension.class)
 @SpringBootTest(webEnvironment = SpringBootTest.WebEnvironment.RANDOM_PORT)

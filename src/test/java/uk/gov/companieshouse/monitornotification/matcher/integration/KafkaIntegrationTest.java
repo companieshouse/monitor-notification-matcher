@@ -3,7 +3,7 @@ package uk.gov.companieshouse.monitornotification.matcher.integration;
 import static org.hamcrest.MatcherAssert.assertThat;
 import static org.hamcrest.Matchers.is;
 import static org.junit.jupiter.api.Assertions.assertTrue;
-import static uk.gov.companieshouse.monitornotification.matcher.util.NotificationMatchTestUtils.buildFilingUpdateMessage;
+import static uk.gov.companieshouse.monitornotification.matcher.utils.NotificationMatchTestUtils.buildFilingUpdateMessage;
 
 import java.io.IOException;
 import java.util.concurrent.CountDownLatch;

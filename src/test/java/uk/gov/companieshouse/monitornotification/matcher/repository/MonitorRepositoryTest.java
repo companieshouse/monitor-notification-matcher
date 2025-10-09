@@ -3,12 +3,12 @@ package uk.gov.companieshouse.monitornotification.matcher.repository;
 
 import static org.hamcrest.MatcherAssert.assertThat;
 import static org.hamcrest.Matchers.is;
-import static uk.gov.companieshouse.monitornotification.matcher.util.NotificationMatchTestUtils.USER_ID;
-import static uk.gov.companieshouse.monitornotification.matcher.util.NotificationMatchTestUtils.KIND;
-import static uk.gov.companieshouse.monitornotification.matcher.util.NotificationMatchTestUtils.CREATED_AT;
-import static uk.gov.companieshouse.monitornotification.matcher.util.NotificationMatchTestUtils.MESSAGE_ID;
-import static uk.gov.companieshouse.monitornotification.matcher.util.NotificationMatchTestUtils.APP_ID;
-import static uk.gov.companieshouse.monitornotification.matcher.util.NotificationMatchTestUtils.DATA_PAYLOAD;
+import static uk.gov.companieshouse.monitornotification.matcher.utils.NotificationMatchTestUtils.USER_ID;
+import static uk.gov.companieshouse.monitornotification.matcher.utils.NotificationMatchTestUtils.KIND;
+import static uk.gov.companieshouse.monitornotification.matcher.utils.NotificationMatchTestUtils.CREATED_AT;
+import static uk.gov.companieshouse.monitornotification.matcher.utils.NotificationMatchTestUtils.MESSAGE_ID;
+import static uk.gov.companieshouse.monitornotification.matcher.utils.NotificationMatchTestUtils.APP_ID;
+import static uk.gov.companieshouse.monitornotification.matcher.utils.NotificationMatchTestUtils.DATA_PAYLOAD;
 
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;

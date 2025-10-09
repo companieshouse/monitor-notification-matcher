@@ -90,17 +90,18 @@ public class NotificationMatchDataExtractor {
         return node.get(attribute);
     }
 
-    private JsonNode findNestedDataNode(final filing message) {
+    public JsonNode findNestedDataNode(final filing message) {
         logger.trace("findNestedDataNode(message=%s) method called.".formatted(message));
         try {
-            JsonNode dataNode = findDataNode(message).get("data");
+            JsonNode dataNode = findDataNode(message);
+            JsonNode nestedNode = dataNode.get("data");
 
-            if(dataNode == null || dataNode.isEmpty()) {
+            if(nestedNode == null || nestedNode.isEmpty()) {
                 logger.debug("No nested 'data' node found in message payload, result was: %s".formatted(dataNode));
                 throw new IllegalArgumentException("No nested 'data' node found in message payload!");
             }
 
-            return dataNode;
+            return nestedNode;
 
         } catch (IllegalArgumentException e) {
             logger.error("An error occurred while attempting to extract the JsonNode: %s".formatted("data"), e);
@@ -108,7 +109,7 @@ public class NotificationMatchDataExtractor {
         }
     }
 
-    private JsonNode findDataNode(final filing message) {
+    public JsonNode findDataNode(final filing message) {
         logger.trace("findDataNode(message=%s) method called.".formatted(message));
         try {
             return mapper.readTree(message.getData());

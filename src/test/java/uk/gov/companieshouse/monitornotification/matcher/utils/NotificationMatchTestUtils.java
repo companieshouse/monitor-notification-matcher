@@ -1,4 +1,4 @@
-package uk.gov.companieshouse.monitornotification.matcher.util;
+package uk.gov.companieshouse.monitornotification.matcher.utils;
 
 import monitor.filing;
 import org.springframework.messaging.Message;
@@ -101,6 +101,7 @@ public class NotificationMatchTestUtils {
             {
                 "app_id": "chs-monitor-notification-matcher.filing",
                 "data": {
+                  "company_name": null,
                   "type": "AP01",
                   "description" : "appoint-person-director-company-with-name-date",
                   "description_values" : {

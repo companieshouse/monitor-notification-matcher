@@ -8,8 +8,8 @@ import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.times;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
-import static uk.gov.companieshouse.monitornotification.matcher.util.NotificationMatchTestUtils.COMPANY_NUMBER;
-import static uk.gov.companieshouse.monitornotification.matcher.util.NotificationMatchTestUtils.buildCompanyDetails;
+import static uk.gov.companieshouse.monitornotification.matcher.utils.NotificationMatchTestUtils.COMPANY_NUMBER;
+import static uk.gov.companieshouse.monitornotification.matcher.utils.NotificationMatchTestUtils.buildCompanyDetails;
 
 import com.google.api.client.http.HttpHeaders;
 import com.google.api.client.http.HttpResponseException;
