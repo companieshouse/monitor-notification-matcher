@@ -23,8 +23,9 @@ import org.springframework.test.context.ActiveProfiles;
 import uk.gov.companieshouse.monitornotification.matcher.consumer.NotificationMatchConsumer;
 
 @SpringBootTest
-@EmbeddedKafka(partitions = 1,
-        topics = { "test-topic" },
+@EmbeddedKafka(
+        partitions = 1,
+        topics = { "test-kafka-topic" },
         brokerProperties = {"listeners=PLAINTEXT://localhost:9092", "port=9092" }
 )
 @TestInstance(TestInstance.Lifecycle.PER_CLASS)
@@ -53,7 +54,7 @@ public class KafkaIntegrationTest {
     void testMessageIsConsumed() throws IOException, InterruptedException {
         Message<filing> message = buildFilingUpdateMessage();
 
-        kafkaTemplate.send("test-topic", message.getPayload());
+        kafkaTemplate.send("test-kafka-topic", message.getPayload());
 
         boolean messageConsumed = latch.await(10, TimeUnit.SECONDS);
 
