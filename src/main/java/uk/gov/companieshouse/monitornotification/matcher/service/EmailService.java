@@ -43,7 +43,7 @@ public class EmailService {
             document.setMessageType(message.getMessageType());
             document.setData(jsonData);
             document.setCreatedAt(message.getCreatedAt());
-            document.setUserId(document.getUserId());
+            document.setUserId(message.getUserId());
 
             // Save the model to the mongo matches collection.
             repository.save(document);

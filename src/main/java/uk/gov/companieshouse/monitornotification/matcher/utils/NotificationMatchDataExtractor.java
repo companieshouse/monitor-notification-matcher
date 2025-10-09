@@ -40,7 +40,7 @@ public class NotificationMatchDataExtractor {
     }
 
     public FilingHistory getFilingHistory(final filing message) {
-        logger.trace("createFilingHistory(message=%s) method called.".formatted(message));
+        logger.trace("getFilingHistory(message=%s) method called.".formatted(message));
 
         String type = getFilingType(message);
         String description = getFilingDescription(message);
@@ -64,14 +64,14 @@ public class NotificationMatchDataExtractor {
     }
 
     private String getFilingDate(final filing message) {
-        logger.trace("getFilingDescription(message=%s) method called.".formatted(message));
+        logger.trace("getFilingDate(message=%s) method called.".formatted(message));
 
         JsonNode filingType = getMandatoryNodeValue(findNestedDataNode(message), "date");
         return filingType.asText();
     }
 
     public Optional<JsonNode> getOptionalNodeValue(final JsonNode node, final String attribute) {
-        logger.trace("getOptionalNodeValue(node=%s, nodeName=%s) method called.".formatted(node, attribute));
+        logger.trace("getOptionalNodeValue(node=%s, attribute=%s) method called.".formatted(node, attribute));
 
         if(node == null || !node.has(attribute)) {
             logger.debug("The given node does not contain a valid '%s' attribute!".formatted(attribute));
@@ -82,7 +82,7 @@ public class NotificationMatchDataExtractor {
     }
 
     public JsonNode getMandatoryNodeValue(final JsonNode node, final String attribute) throws IllegalArgumentException {
-        logger.trace("getMandatoryNodeValue(node=%s, nodeName=%s) method called.".formatted(node, attribute));
+        logger.trace("getMandatoryNodeValue(node=%s, attribute=%s) method called.".formatted(node, attribute));
 
         if(node == null || !node.has(attribute)) {
             logger.info("The given node does not contain a valid '%s' node!".formatted(attribute));

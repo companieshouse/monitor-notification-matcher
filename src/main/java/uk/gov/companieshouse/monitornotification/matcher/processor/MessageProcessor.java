@@ -60,7 +60,7 @@ public class MessageProcessor {
 
         // Send the email document to the email service for processing.
         ApiResponse<Void> apiResponse = emailService.sendEmail(messageSend);
-        logger.error("Message sent to CHS Kafka API successfully: (Status Code: %d)".formatted(apiResponse.getStatusCode()));
+        logger.info("Message sent to CHS Kafka API successfully: (Status Code: %d)".formatted(apiResponse.getStatusCode()));
 
     }
 
