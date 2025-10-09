@@ -5,7 +5,6 @@ import static java.lang.Boolean.TRUE;
 import static org.hamcrest.MatcherAssert.assertThat;
 import static org.hamcrest.Matchers.is;
 import static org.hamcrest.Matchers.notNullValue;
-import static org.hamcrest.Matchers.nullValue;
 import static org.junit.jupiter.api.Assertions.assertThrows;
 import static uk.gov.companieshouse.monitornotification.matcher.utils.NotificationMatchTestUtils.buildFilingDeleteMessageWithoutCompanyNumber;
 import static uk.gov.companieshouse.monitornotification.matcher.utils.NotificationMatchTestUtils.buildFilingUpdateMessage;
@@ -25,7 +24,7 @@ import uk.gov.companieshouse.logging.LoggerFactory;
 import uk.gov.companieshouse.monitornotification.matcher.exception.NonRetryableException;
 
 @ExtendWith(MockitoExtension.class)
-public class NotificationMatchDataExtractorTest {
+class NotificationMatchDataExtractorTest {
 
     ObjectMapper mapper;
     Logger logger;
@@ -41,7 +40,7 @@ public class NotificationMatchDataExtractorTest {
     }
 
     @Test
-    public void givenValidPayload_whenFindDataNodeExists_thenReturnValue() {
+    void givenValidPayload_whenFindDataNodeExists_thenReturnValue() {
         Message<filing> message = buildFilingUpdateMessage();
         filing payload = message.getPayload();
 
@@ -52,7 +51,7 @@ public class NotificationMatchDataExtractorTest {
     }
 
     @Test
-    public void givenValidPayload_whenFindNestedDataNode_thenReturnValue() {
+    void givenValidPayload_whenFindNestedDataNode_thenReturnValue() {
         Message<filing> message = buildFilingUpdateMessage();
         filing payload = message.getPayload();
 
@@ -63,7 +62,7 @@ public class NotificationMatchDataExtractorTest {
     }
 
     @Test
-    public void givenMissingDataNode_whenGetOptionalValue_thenReturnEmpty() {
+    void givenMissingDataNode_whenGetOptionalValue_thenReturnEmpty() {
         Optional<JsonNode> companyNumber = underTest.getOptionalNodeValue(null, "company_number");
 
         assertThat(companyNumber, is(notNullValue()));
@@ -71,7 +70,7 @@ public class NotificationMatchDataExtractorTest {
     }
 
     @Test
-    public void givenOptionalDataNodeValue_whenValueExists_thenReturnValue() {
+    void givenOptionalDataNodeValue_whenValueExists_thenReturnValue() {
         Message<filing> message = buildFilingUpdateMessage();
         filing payload = message.getPayload();
 
@@ -84,7 +83,7 @@ public class NotificationMatchDataExtractorTest {
     }
 
     @Test
-    public void givenOptionalDataNodeValue_whenNullValueExists_thenReturnValue() {
+    void givenOptionalDataNodeValue_whenNullValueExists_thenReturnValue() {
         Message<filing> message = buildFilingDeleteMessageWithoutCompanyNumber();
         filing payload = message.getPayload();
 
@@ -96,7 +95,7 @@ public class NotificationMatchDataExtractorTest {
     }
 
     @Test
-    public void givenOptionalDataNodeValue_whenValueMissing_thenReturnEmpty() {
+    void givenOptionalDataNodeValue_whenValueMissing_thenReturnEmpty() {
         Message<filing> message = buildFilingUpdateMessage();
         filing payload = message.getPayload();
 
@@ -108,7 +107,7 @@ public class NotificationMatchDataExtractorTest {
     }
 
     @Test
-    public void givenMissingDataNode_whenGetMandatoryValue_thenRaiseException() {
+    void givenMissingDataNode_whenGetMandatoryValue_thenRaiseException() {
         IllegalArgumentException expectedException = assertThrows(IllegalArgumentException.class, () -> {
             underTest.getMandatoryNodeValue(null, "company_number");
         });
@@ -118,7 +117,7 @@ public class NotificationMatchDataExtractorTest {
     }
 
     @Test
-    public void givenDataNode_whenGetMandatoryValueMissing_thenRaiseException() {
+    void givenDataNode_whenGetMandatoryValueMissing_thenRaiseException() {
         Message<filing> message = buildFilingUpdateMessage();
         filing payload = message.getPayload();
 
@@ -133,7 +132,7 @@ public class NotificationMatchDataExtractorTest {
     }
 
     @Test
-    public void givenOptionalNestedDataNodeValue_whenValueExists_thenReturnValue() {
+    void givenOptionalNestedDataNodeValue_whenValueExists_thenReturnValue() {
         Message<filing> message = buildFilingUpdateMessage();
         filing payload = message.getPayload();
 
@@ -146,7 +145,7 @@ public class NotificationMatchDataExtractorTest {
     }
 
     @Test
-    public void givenOptionalNestedDataNodeValue_whenValueMissing_thenReturnEmpty() {
+    void givenOptionalNestedDataNodeValue_whenValueMissing_thenReturnEmpty() {
         Message<filing> message = buildFilingUpdateMessage();
         filing payload = message.getPayload();
 
@@ -158,7 +157,7 @@ public class NotificationMatchDataExtractorTest {
     }
 
     @Test
-    public void givenNestedDataNode_whenNullValue_thenRaiseException() {
+    void givenNestedDataNode_whenNullValue_thenRaiseException() {
         Message<filing> message = buildFilingUpdateMessage();
         filing payload = message.getPayload();
 
@@ -173,7 +172,7 @@ public class NotificationMatchDataExtractorTest {
     }
 
     @Test
-    public void givenNestedDataNode_whenEmptyValue_thenRaiseException() {
+    void givenNestedDataNode_whenEmptyValue_thenRaiseException() {
         Message<filing> message = buildFilingUpdateMessage();
         filing payload = message.getPayload();
 

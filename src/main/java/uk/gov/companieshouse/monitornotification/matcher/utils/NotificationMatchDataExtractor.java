@@ -15,6 +15,8 @@ import uk.gov.companieshouse.monitornotification.matcher.model.FilingHistory;
 @Component
 public class NotificationMatchDataExtractor {
 
+    private static final String ERROR_EXTRACTING_JSON_NODE = "An error occurred while attempting to extract the JsonNode: %s";
+
     private final ObjectMapper mapper;
     private final Logger logger;
 
@@ -105,7 +107,7 @@ public class NotificationMatchDataExtractor {
 
         } catch (IllegalArgumentException e) {
             logger.error("An error occurred while attempting to extract the JsonNode: %s".formatted("data"), e);
-            throw new NonRetryableException("An error occurred while attempting to extract the JsonNode: %s".formatted("data"), e);
+            throw new NonRetryableException(ERROR_EXTRACTING_JSON_NODE.formatted("data"), e);
         }
     }
 
@@ -116,7 +118,7 @@ public class NotificationMatchDataExtractor {
 
         } catch (JsonProcessingException e) {
             logger.error("An error occurred while attempting to extract the JsonNode: %s".formatted("data"), e);
-            throw new NonRetryableException("An error occurred while attempting to extract the JsonNode: %s".formatted("data"), e);
+            throw new NonRetryableException(ERROR_EXTRACTING_JSON_NODE.formatted("data"), e);
         }
     }
 

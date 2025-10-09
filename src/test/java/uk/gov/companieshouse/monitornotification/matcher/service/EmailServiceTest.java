@@ -61,7 +61,7 @@ public class EmailServiceTest {
     }
 
     @Test
-    public void givenValidDocument_whenSendEmailCalled_thenSuccess() throws ApiErrorResponseException {
+    void givenValidDocument_whenSendEmailCalled_thenSuccess() throws ApiErrorResponseException {
         InternalApiClient client = mock(InternalApiClient.class);
         HttpClient httpClient = mock(HttpClient.class);
         PrivateMessageSendHandler handler = mock(PrivateMessageSendHandler.class);
@@ -88,7 +88,7 @@ public class EmailServiceTest {
     }
 
     @Test
-    public void givenValidDocument_whenSendEmailFails_thenRaiseException() throws ApiErrorResponseException {
+    void givenValidDocument_whenSendEmailFails_thenRaiseException() throws ApiErrorResponseException {
         InternalApiClient client = mock(InternalApiClient.class);
         HttpClient httpClient = mock(HttpClient.class);
         PrivateMessageSendHandler handler = mock(PrivateMessageSendHandler.class);
@@ -126,7 +126,7 @@ public class EmailServiceTest {
 
 
     @Test
-    public void givenValidDocument_whenSaveMatchCalled_thenSuccess() {
+    void givenValidDocument_whenSaveMatchCalled_thenSuccess() {
         MessageSend document = buildValidEmailDocument(TRUE);
 
         underTest.saveMatch(document);
@@ -135,7 +135,7 @@ public class EmailServiceTest {
     }
 
     @Test
-    public void givenInvalidDocument_whenSaveMatchCalled_thenParseExceptionRaised() throws JsonProcessingException {
+    void givenInvalidDocument_whenSaveMatchCalled_thenParseExceptionRaised() throws JsonProcessingException {
         MessageSend document = buildValidEmailDocument(FALSE);
         when(mapper.writeValueAsString(document.getData())).thenThrow(JsonProcessingException.class);
 

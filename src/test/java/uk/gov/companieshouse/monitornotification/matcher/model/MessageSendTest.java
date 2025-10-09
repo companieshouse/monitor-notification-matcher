@@ -16,7 +16,7 @@ public class MessageSendTest {
     MessageSend underTest;
 
     @BeforeEach
-    public void setUp() {
+    void setUp() {
         underTest = new MessageSend();
 
         MessageSendData messageSendData = getMessageSendData();
@@ -30,7 +30,7 @@ public class MessageSendTest {
     }
 
     @Test
-    public void givenValidData_whenGettersCalled_thenValuesAreCorrect() {
+    void givenValidData_whenGettersCalled_thenValuesAreCorrect() {
         assertThat(underTest.getAppId(), is("test-app-id"));
         assertThat(underTest.getMessageId(), is("test-message-id"));
         assertThat(underTest.getMessageType(), is("test-message-type"));

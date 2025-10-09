@@ -49,11 +49,11 @@ public class MessageProcessor {
             return;
         }
 
-        FilingHistory filingHistory = extractor.getFilingHistory(message);
+        var filingHistory = extractor.getFilingHistory(message);
         logger.debug("Filing history created: %s".formatted(filingHistory));
 
         // Prepare the email document using the payload and company details.
-        MessageSend messageSend = createMessageSend(message, companyDetails.get(), filingHistory);
+        var messageSend = createMessageSend(message, companyDetails.get(), filingHistory);
 
         // Save the email request (document) to the repository.
         emailService.saveMatch(messageSend);
@@ -68,12 +68,12 @@ public class MessageProcessor {
         logger.trace("createMessageSend(payload=%s, details=%s, history=%s) method called."
                 .formatted(payload, details, history));
 
-        MessageSend message = new MessageSend();
+        var message = new MessageSend();
         message.setAppId("monitor-notification-matcher.filing");
         message.setMessageId("");
         message.setMessageType("monitor_email");
 
-        MessageSendData data = new MessageSendData();
+        var data = new MessageSendData();
         data.setCompanyNumber(details.getCompanyNumber());
         data.setCompanyName(details.getCompanyName());
         data.setFilingDate(history.getDate());
