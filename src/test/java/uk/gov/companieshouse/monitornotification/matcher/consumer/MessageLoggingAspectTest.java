@@ -1,5 +1,8 @@
 package uk.gov.companieshouse.monitornotification.matcher.consumer;
 
+import static org.hamcrest.MatcherAssert.assertThat;
+import static org.hamcrest.Matchers.is;
+import static org.hamcrest.Matchers.notNullValue;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 import static uk.gov.companieshouse.monitornotification.matcher.utils.NotificationMatchTestUtils.buildFilingUpdateMessage;
 
@@ -13,6 +16,7 @@ import org.springframework.boot.test.system.CapturedOutput;
 import org.springframework.boot.test.system.OutputCaptureExtension;
 import org.springframework.messaging.Message;
 import org.springframework.test.context.ActiveProfiles;
+import uk.gov.companieshouse.monitornotification.matcher.logging.DataMapHolder;
 import uk.gov.companieshouse.monitornotification.matcher.utils.DisabledIfDockerUnavailable;
 
 @ExtendWith(OutputCaptureExtension.class)
@@ -26,13 +30,20 @@ class MessageLoggingAspectTest {
     private NotificationMatchConsumer consumer;
 
     @Test
-    void testAspectLogging(CapturedOutput output) {
+    void testAspectLogging(final CapturedOutput output) {
         Message<filing> message = buildFilingUpdateMessage();
+
+        DataMapHolder.initialise(null);
 
         consumer.consume(message);
 
+        String correlationId = DataMapHolder.getRequestId();
+
         // Verifies that the aspect methods were called
         assertTrue(output.getOut().contains("Processing kafka message"));
+        assertTrue(output.getOut().contains(correlationId));
         assertTrue(output.getOut().contains("Processed kafka message"));
+
+        assertThat(correlationId, is(notNullValue()));
     }
 }

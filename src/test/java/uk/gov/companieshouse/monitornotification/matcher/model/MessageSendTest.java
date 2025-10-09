@@ -11,7 +11,7 @@ import uk.gov.companieshouse.api.chskafka.MessageSend;
 import uk.gov.companieshouse.api.chskafka.MessageSendData;
 
 @ExtendWith(MockitoExtension.class)
-public class MessageSendTest {
+class MessageSendTest {
 
     MessageSend underTest;
 

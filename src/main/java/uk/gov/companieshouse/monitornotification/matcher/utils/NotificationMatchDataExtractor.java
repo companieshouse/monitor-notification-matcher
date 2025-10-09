@@ -106,7 +106,7 @@ public class NotificationMatchDataExtractor {
             return nestedNode;
 
         } catch (IllegalArgumentException e) {
-            logger.error("An error occurred while attempting to extract the JsonNode: %s".formatted("data"), e);
+            logger.error(ERROR_EXTRACTING_JSON_NODE.formatted("data"), e);
             throw new NonRetryableException(ERROR_EXTRACTING_JSON_NODE.formatted("data"), e);
         }
     }
@@ -117,7 +117,7 @@ public class NotificationMatchDataExtractor {
             return mapper.readTree(message.getData());
 
         } catch (JsonProcessingException e) {
-            logger.error("An error occurred while attempting to extract the JsonNode: %s".formatted("data"), e);
+            logger.error(ERROR_EXTRACTING_JSON_NODE.formatted("data"), e);
             throw new NonRetryableException(ERROR_EXTRACTING_JSON_NODE.formatted("data"), e);
         }
     }
