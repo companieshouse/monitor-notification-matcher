@@ -1,49 +1,75 @@
 package uk.gov.companieshouse.monitornotification.matcher.consumer;
 
-import static org.hamcrest.MatcherAssert.assertThat;
-import static org.hamcrest.Matchers.is;
-import static org.hamcrest.Matchers.notNullValue;
-import static org.junit.jupiter.api.Assertions.assertTrue;
+import static org.mockito.ArgumentMatchers.any;
+import static org.mockito.ArgumentMatchers.eq;
+import static org.mockito.Mockito.mock;
+import static org.mockito.Mockito.times;
+import static org.mockito.Mockito.verify;
+import static org.mockito.Mockito.when;
 import static uk.gov.companieshouse.monitornotification.matcher.utils.NotificationMatchTestUtils.buildFilingUpdateMessage;
 
+import java.util.HashMap;
+import java.util.Map;
 import monitor.filing;
+import org.aspectj.lang.JoinPoint;
+import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
-import org.junit.jupiter.api.TestInstance;
 import org.junit.jupiter.api.extension.ExtendWith;
-import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.boot.test.context.SpringBootTest;
-import org.springframework.boot.test.system.CapturedOutput;
-import org.springframework.boot.test.system.OutputCaptureExtension;
+import org.mockito.Mock;
+import org.mockito.junit.jupiter.MockitoExtension;
+import org.springframework.kafka.support.KafkaHeaders;
 import org.springframework.messaging.Message;
-import org.springframework.test.context.ActiveProfiles;
-import uk.gov.companieshouse.monitornotification.matcher.logging.DataMapHolder;
-import uk.gov.companieshouse.monitornotification.matcher.utils.DisabledIfDockerUnavailable;
+import org.springframework.messaging.support.GenericMessage;
+import uk.gov.companieshouse.logging.Logger;
 
-@ExtendWith(OutputCaptureExtension.class)
-@SpringBootTest(webEnvironment = SpringBootTest.WebEnvironment.RANDOM_PORT)
-@TestInstance(TestInstance.Lifecycle.PER_CLASS)
-@ActiveProfiles("test")
-@DisabledIfDockerUnavailable
+@ExtendWith(MockitoExtension.class)
 class MessageLoggingAspectTest {
 
-    @Autowired
-    private NotificationMatchConsumer consumer;
+    @Mock
+    Logger logger;
+
+    MessageLoggingAspect underTest;
+
+    @BeforeEach
+    void setUp() {
+        underTest = new MessageLoggingAspect(logger);
+    }
 
     @Test
-    void testAspectLogging(final CapturedOutput output) {
-        Message<filing> message = buildFilingUpdateMessage();
+    void givenValidMessage_whenLogBeforeMainConsumerCalled_thenUseValues() {
+        Map<String, Object> kafkaMessageHeaders = new HashMap<>();
+        kafkaMessageHeaders.put(KafkaHeaders.RECEIVED_TOPIC, "test-kafka-topic");
+        kafkaMessageHeaders.put(KafkaHeaders.RECEIVED_PARTITION, 0);
+        kafkaMessageHeaders.put(KafkaHeaders.OFFSET, 45L);
+        kafkaMessageHeaders.put(KafkaHeaders.CORRELATION_ID, "test-correlation-id");
 
-        DataMapHolder.initialise(null);
+        Message<filing> kafkaMessage = buildFilingUpdateMessage();
+        GenericMessage<filing> message = new GenericMessage<>(kafkaMessage.getPayload(), kafkaMessageHeaders);
 
-        consumer.consume(message);
+        JoinPoint joinPoint = mock(JoinPoint.class);
+        when(joinPoint.getArgs()).thenReturn(new Object[]{message});
 
-        String correlationId = DataMapHolder.getRequestId();
+        underTest.logBeforeMainConsumer(joinPoint);
 
-        // Verifies that the aspect methods were called
-        assertTrue(output.getOut().contains("Processing kafka message"));
-        assertTrue(output.getOut().contains(correlationId));
-        assertTrue(output.getOut().contains("Processed kafka message"));
+        verify(logger, times(1)).debug(eq("Processing kafka message"), any(Map.class));
+    }
 
-        assertThat(correlationId, is(notNullValue()));
+    @Test
+    void givenValidMessage_whenLogAfterMainConsumerCalled_thenUseValues() {
+        Map<String, Object> kafkaMessageHeaders = new HashMap<>();
+        kafkaMessageHeaders.put(KafkaHeaders.RECEIVED_TOPIC, "test-kafka-topic");
+        kafkaMessageHeaders.put(KafkaHeaders.RECEIVED_PARTITION, 0);
+        kafkaMessageHeaders.put(KafkaHeaders.OFFSET, 45L);
+        kafkaMessageHeaders.put(KafkaHeaders.CORRELATION_ID, "test-correlation-id");
+
+        Message<filing> kafkaMessage = buildFilingUpdateMessage();
+        GenericMessage<filing> message = new GenericMessage<>(kafkaMessage.getPayload(), kafkaMessageHeaders);
+
+        JoinPoint joinPoint = mock(JoinPoint.class);
+        when(joinPoint.getArgs()).thenReturn(new Object[]{message});
+
+        underTest.logAfterMainConsumer(joinPoint);
+
+        verify(logger, times(1)).debug(eq("Processed kafka message"), any(Map.class));
     }
 }
