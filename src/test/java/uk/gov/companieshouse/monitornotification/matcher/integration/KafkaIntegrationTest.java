@@ -41,6 +41,7 @@ public class KafkaIntegrationTest {
     private NotificationMatchConsumer consumer;
 
     private static String topicName;
+
     private final CountDownLatch latch = new CountDownLatch(1);
     private filing receivedMessage;
 
