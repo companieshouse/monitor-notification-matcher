@@ -133,7 +133,7 @@ public class MessageProcessorTest {
         underTest.processMessage(payload);
 
         verify(logger, times(21)).trace(anyString());
-        verify(logger, times(0)).info(anyString());
+        verify(logger, times(1)).info(anyString());
         verify(logger, times(2)).debug(anyString());
         verify(companyService, times(1)).findCompanyDetails(COMPANY_NUMBER);
         verify(emailService, times(1)).saveMatch(any(MessageSend.class));
