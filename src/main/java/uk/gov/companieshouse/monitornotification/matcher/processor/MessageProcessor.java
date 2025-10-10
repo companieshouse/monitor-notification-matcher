@@ -9,6 +9,7 @@ import uk.gov.companieshouse.api.company.CompanyDetails;
 import uk.gov.companieshouse.api.model.ApiResponse;
 import uk.gov.companieshouse.logging.Logger;
 import uk.gov.companieshouse.monitornotification.matcher.config.properties.ExternalLinksProperties;
+import uk.gov.companieshouse.monitornotification.matcher.logging.DataMapHolder;
 import uk.gov.companieshouse.monitornotification.matcher.model.FilingHistory;
 import uk.gov.companieshouse.monitornotification.matcher.service.CompanyService;
 import uk.gov.companieshouse.monitornotification.matcher.service.EmailService;
@@ -70,7 +71,7 @@ public class MessageProcessor {
 
         var message = new MessageSend();
         message.setAppId("monitor-notification-matcher.filing");
-        message.setMessageId("");
+        message.setMessageId(DataMapHolder.getRequestId());
         message.setMessageType("monitor_email");
 
         var data = new MessageSendData();
