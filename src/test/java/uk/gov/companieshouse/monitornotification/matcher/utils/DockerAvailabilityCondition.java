@@ -1,4 +1,4 @@
-package uk.gov.companieshouse.monitornotification.matcher.util;
+package uk.gov.companieshouse.monitornotification.matcher.utils;
 
 import java.util.concurrent.TimeUnit;
 import org.junit.jupiter.api.extension.ConditionEvaluationResult;

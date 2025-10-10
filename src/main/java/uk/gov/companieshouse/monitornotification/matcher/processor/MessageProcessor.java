@@ -1,48 +1,42 @@
 package uk.gov.companieshouse.monitornotification.matcher.processor;
 
-import static java.lang.Boolean.FALSE;
-import static java.lang.String.format;
-
-import com.fasterxml.jackson.core.JsonProcessingException;
-import com.fasterxml.jackson.databind.JsonNode;
-import com.fasterxml.jackson.databind.ObjectMapper;
-import java.util.Map;
 import java.util.Optional;
-import java.util.TreeMap;
-import java.util.UUID;
 import monitor.filing;
 import org.springframework.stereotype.Component;
+import uk.gov.companieshouse.api.chskafka.MessageSend;
+import uk.gov.companieshouse.api.chskafka.MessageSendData;
 import uk.gov.companieshouse.api.company.CompanyDetails;
+import uk.gov.companieshouse.api.model.ApiResponse;
 import uk.gov.companieshouse.logging.Logger;
 import uk.gov.companieshouse.monitornotification.matcher.config.properties.ExternalLinksProperties;
-import uk.gov.companieshouse.monitornotification.matcher.exception.NonRetryableException;
-import uk.gov.companieshouse.monitornotification.matcher.model.EmailDocument;
+import uk.gov.companieshouse.monitornotification.matcher.model.FilingHistory;
 import uk.gov.companieshouse.monitornotification.matcher.service.CompanyService;
 import uk.gov.companieshouse.monitornotification.matcher.service.EmailService;
+import uk.gov.companieshouse.monitornotification.matcher.utils.NotificationMatchDataExtractor;
 
 @Component
 public class MessageProcessor {
 
     private final EmailService emailService;
     private final CompanyService companyService;
-    private final ObjectMapper objectMapper;
     private final Logger logger;
     private final ExternalLinksProperties properties;
+    private final NotificationMatchDataExtractor extractor;
 
     public MessageProcessor(final EmailService emailService, final CompanyService companyService,
-            final ObjectMapper objectMapper, final Logger logger, final ExternalLinksProperties properties) {
+            final Logger logger, final ExternalLinksProperties properties, final NotificationMatchDataExtractor extractor) {
         this.emailService = emailService;
         this.companyService = companyService;
-        this.objectMapper = objectMapper;
         this.logger = logger;
         this.properties = properties;
+        this.extractor = extractor;
     }
 
     public void processMessage(final filing message) {
         logger.trace("processMessage(message=%s) method called. ".formatted(message));
 
         // Extract the Company ID from the message supplied.
-        Optional<String> companyNumber = getCompanyNumber(message);
+        Optional<String> companyNumber = extractor.getCompanyNumber(message);
         if (companyNumber.isEmpty() || companyNumber.get().isBlank()) {
             logger.info("No company number was detected within the notification match payload. Processing aborted!");
             return;
@@ -55,76 +49,46 @@ public class MessageProcessor {
             return;
         }
 
-        logger.debug("Company details found: %s".formatted(companyDetails.get()));
+        var filingHistory = extractor.getFilingHistory(message);
+        logger.debug("Filing history created: %s".formatted(filingHistory));
 
         // Prepare the email document using the payload and company details.
-        EmailDocument<?> emailDocument = createEmailDocument(message, companyDetails.get());
+        var messageSend = createMessageSend(message, companyDetails.get(), filingHistory);
 
         // Save the email request (document) to the repository.
-        emailService.saveMatch(emailDocument, message.getUserId());
+        emailService.saveMatch(messageSend);
 
         // Send the email document to the email service for processing.
-        emailService.sendEmail(emailDocument);
+        ApiResponse<Void> apiResponse = emailService.sendEmail(messageSend);
+        logger.info("Message sent to CHS Kafka API successfully: (Status Code: %d)".formatted(apiResponse.getStatusCode()));
 
     }
 
-    private Optional<String> getCompanyNumber(final filing message) {
-        logger.trace("getCompanyNumber(message=%s) method called.".formatted(message));
+    private MessageSend createMessageSend(final filing payload, final CompanyDetails details, final FilingHistory history) {
+        logger.trace("createMessageSend(payload=%s, details=%s, history=%s) method called."
+                .formatted(payload, details, history));
 
-        Optional<JsonNode> node = findDataNode(message, "company_number");
-        if(node.isEmpty()) {
-            logger.info("The message does not contain a valid company_number field.");
-            return Optional.empty();
-        }
-        return Optional.ofNullable(node.get().asText());
-    }
+        var message = new MessageSend();
+        message.setAppId("monitor-notification-matcher.filing");
+        message.setMessageId("");
+        message.setMessageType("monitor_email");
 
-    private Boolean isDeleteRequest(final filing message) {
-        logger.trace("isDeleteRequest(message=%s) method called.".formatted(message));
+        var data = new MessageSendData();
+        data.setCompanyNumber(details.getCompanyNumber());
+        data.setCompanyName(details.getCompanyName());
+        data.setFilingDate(history.getDate());
+        data.setFilingDescription(history.getDescription());
+        data.setFilingType(history.getType());
+        data.setIsDelete(extractor.isDelete(payload));
+        data.setChsURL(properties.getChsUrl());
+        data.setMonitorURL(properties.getMonitorUrl());
+        data.setFrom("Companies House <noreply@companieshouse.gov.uk>");
+        data.setSubject("Company number %s %s".formatted(details.getCompanyNumber(), details.getCompanyName()));
 
-        Optional<JsonNode> node = findDataNode(message, "is_delete");
-        if(node.isEmpty()) {
-            logger.info("The message does not contain a valid is_delete field (defaulting to FALSE).");
-            return FALSE;
-        }
-        return node.get().asBoolean(FALSE);
-    }
+        message.setData(data);
+        message.setUserId(payload.getUserId());
+        message.setCreatedAt(payload.getNotifiedAt());
 
-    private Optional<JsonNode> findDataNode(final filing message, final String nodeName) {
-        logger.trace("findDataNode(nodeName=%s) method called.".formatted(nodeName));
-        try {
-            JsonNode root = objectMapper.readTree(message.getData());
-            JsonNode node = root.get(nodeName);
-
-            logger.debug("Search for Node(%s), returned result: %s".formatted(nodeName, node));
-
-            return Optional.ofNullable(node);
-
-        } catch (JsonProcessingException e) {
-            logger.error("An error occurred while attempting to extract the JsonNode: %s".formatted(nodeName), e);
-            throw new NonRetryableException("An error occurred while attempting to extract the JsonNode: %s".formatted(nodeName), e);
-        }
-    }
-
-    private EmailDocument<?> createEmailDocument(final filing message, final CompanyDetails details) {
-        logger.trace("createEmailDocument(message=%s, details=%s) method called.".formatted(message, details));
-
-        Map<String, Object> dataMap = new TreeMap<>();
-        dataMap.put("CompanyName", details.getCompanyName());
-        dataMap.put("CompanyNumber", details.getCompanyNumber());
-        dataMap.put("IsDelete", isDeleteRequest(message));
-        dataMap.put("MonitorURL", properties.getMonitorUrl());
-        dataMap.put("ChsURL", properties.getChsUrl());
-        dataMap.put("from", "Companies House <noreply@companieshouse.gov.uk>");
-        dataMap.put("subject", format("Company number %s %s", details.getCompanyNumber(), details.getCompanyName()));
-
-        return EmailDocument.<Map<String, Object>>builder()
-                .withAppId("monitor-notification-matcher.filing")
-                .withMessageId(UUID.randomUUID().toString())
-                .withMessageType("monitor_email")
-                .withCreatedAt(message.getNotifiedAt())
-                .withRecipientEmailAddress(null)
-                .withData(dataMap)
-                .build();
+        return message;
     }
 }

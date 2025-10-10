@@ -4,10 +4,10 @@ import static org.hamcrest.MatcherAssert.assertThat;
 import static org.hamcrest.Matchers.is;
 import static org.hamcrest.Matchers.notNullValue;
 import static org.junit.jupiter.api.Assertions.assertThrows;
-import static uk.gov.companieshouse.monitornotification.matcher.util.NotificationMatchTestUtils.KIND;
-import static uk.gov.companieshouse.monitornotification.matcher.util.NotificationMatchTestUtils.NOTIFIED_AT;
-import static uk.gov.companieshouse.monitornotification.matcher.util.NotificationMatchTestUtils.USER_ID;
-import static uk.gov.companieshouse.monitornotification.matcher.util.NotificationMatchTestUtils.buildFilingRawAvroMessage;
+import static uk.gov.companieshouse.monitornotification.matcher.utils.NotificationMatchTestUtils.KIND;
+import static uk.gov.companieshouse.monitornotification.matcher.utils.NotificationMatchTestUtils.NOTIFIED_AT;
+import static uk.gov.companieshouse.monitornotification.matcher.utils.NotificationMatchTestUtils.USER_ID;
+import static uk.gov.companieshouse.monitornotification.matcher.utils.NotificationMatchTestUtils.buildFilingRawAvroMessage;
 
 import consumer.exception.NonRetryableErrorException;
 import java.nio.charset.StandardCharsets;

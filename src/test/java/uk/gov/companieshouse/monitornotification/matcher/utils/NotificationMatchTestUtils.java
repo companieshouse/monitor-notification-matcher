@@ -1,15 +1,12 @@
-package uk.gov.companieshouse.monitornotification.matcher.util;
+package uk.gov.companieshouse.monitornotification.matcher.utils;
 
-import static java.lang.String.format;
-
-import java.util.Map;
-import java.util.TreeMap;
-import java.util.UUID;
 import monitor.filing;
 import org.springframework.messaging.Message;
 import org.springframework.messaging.support.MessageBuilder;
+import uk.gov.companieshouse.api.chskafka.MessageSend;
+import uk.gov.companieshouse.api.chskafka.MessageSendData;
 import uk.gov.companieshouse.api.company.CompanyDetails;
-import uk.gov.companieshouse.monitornotification.matcher.model.EmailDocument;
+import uk.gov.companieshouse.monitornotification.matcher.model.FilingHistory;
 import uk.gov.companieshouse.monitornotification.matcher.serdes.GenericSerializer;
 
 public class NotificationMatchTestUtils {
@@ -104,6 +101,7 @@ public class NotificationMatchTestUtils {
             {
                 "app_id": "chs-monitor-notification-matcher.filing",
                 "data": {
+                  "company_name": null,
                   "type": "AP01",
                   "description" : "appoint-person-director-company-with-name-date",
                   "description_values" : {
@@ -176,25 +174,40 @@ public class NotificationMatchTestUtils {
         return companyDetails;
     }
 
-    public static EmailDocument<Map<String, Object>> buildValidEmailDocument(Boolean isDelete) {
-        CompanyDetails details = buildCompanyDetails();
+    public static FilingHistory buildFilingHistory() {
+        FilingHistory filingHistory = new FilingHistory();
+        filingHistory.setDate("2025-02-04");
+        filingHistory.setDescription("appoint-person-director-company-with-name-date");
+        filingHistory.setType("AP01");
+        return filingHistory;
+    }
 
-        Map<String, Object> dataMap = new TreeMap<>();
-        dataMap.put("CompanyName", details.getCompanyName());
-        dataMap.put("CompanyNumber", details.getCompanyNumber());
-        dataMap.put("IsDelete", isDelete);
-        dataMap.put("MonitorURL", MONITOR_URL);
-        dataMap.put("ChsURL", CHS_URL);
-        dataMap.put("from", "Companies House <noreply@companieshouse.gov.uk>");
-        dataMap.put("subject", format("Company number %s %s", details.getCompanyNumber(), details.getCompanyName()));
+    public static MessageSend buildValidEmailDocument(Boolean isDelete) {
+        CompanyDetails companyDetails = buildCompanyDetails();
+        FilingHistory filingHistory = buildFilingHistory();
 
-        return EmailDocument.<Map<String, Object>>builder()
-                .withAppId("monitor-notification-matcher.filing")
-                .withMessageId(UUID.randomUUID().toString())
-                .withMessageType("monitor_email")
-                .withCreatedAt(NOTIFIED_AT)
-                .withRecipientEmailAddress(null)
-                .withData(dataMap)
-                .build();
+        MessageSend message = new MessageSend();
+        message.setAppId("monitor-notification-matcher.filing");
+        message.setMessageId("");
+        message.setMessageType("monitor_email");
+
+        MessageSendData data = new MessageSendData();
+        data.setCompanyNumber(companyDetails.getCompanyNumber());
+        data.setCompanyName(companyDetails.getCompanyName());
+        data.setFilingDate(filingHistory.getDate());
+        data.setFilingDescription(filingHistory.getDescription());
+        data.setFilingType(filingHistory.getType());
+        data.setIsDelete(isDelete);
+        data.setChsURL(CHS_URL);
+        data.setMonitorURL(MONITOR_URL);
+        data.setFrom("Companies House <noreply@companieshouse.gov.uk>");
+        data.setSubject("Company number %s %s".formatted(
+                companyDetails.getCompanyNumber(), companyDetails.getCompanyName()));
+
+        message.setData(data);
+        message.setUserId(USER_ID);
+        message.setCreatedAt(NOTIFIED_AT);
+
+        return message;
     }
 }

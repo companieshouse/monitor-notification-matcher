@@ -1,4 +1,4 @@
-package uk.gov.companieshouse.monitornotification.matcher.util;
+package uk.gov.companieshouse.monitornotification.matcher.utils;
 
 import java.lang.annotation.ElementType;
 import java.lang.annotation.Retention;

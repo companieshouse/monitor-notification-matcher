@@ -6,7 +6,7 @@ import static org.hamcrest.Matchers.not;
 import static org.hamcrest.Matchers.notNullValue;
 import static org.springframework.kafka.support.KafkaHeaders.EXCEPTION_CAUSE_FQCN;
 import static org.springframework.kafka.support.KafkaHeaders.EXCEPTION_STACKTRACE;
-import static uk.gov.companieshouse.monitornotification.matcher.util.NotificationMatchTestUtils.buildFilingUpdateMessage;
+import static uk.gov.companieshouse.monitornotification.matcher.utils.NotificationMatchTestUtils.buildFilingUpdateMessage;
 
 import consumer.exception.NonRetryableErrorException;
 import java.io.IOException;
