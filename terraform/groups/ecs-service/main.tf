@@ -19,7 +19,7 @@ terraform {
 }
 
 module "secrets" {
-  source = "git@github.com:companieshouse/terraform-modules//aws/ecs/secrets?ref=1.0.324"
+  source = "git@github.com:companieshouse/terraform-modules//aws/ecs/secrets?ref=1.0.349"
 
   name_prefix = "${local.service_name}-${var.environment}"
   environment = var.environment
@@ -28,7 +28,7 @@ module "secrets" {
 }
 
 module "ecs-service" {
-  source = "git@github.com:companieshouse/terraform-modules//aws/ecs/ecs-service?ref=1.0.324"
+  source = "git@github.com:companieshouse/terraform-modules//aws/ecs/ecs-service?ref=1.0.349"
 
   # Environmental configuration
   environment             = var.environment
@@ -48,7 +48,7 @@ module "ecs-service" {
   # Docker container details
   docker_registry   = var.docker_registry
   docker_repo       = local.docker_repo
-  container_version = var.chs_monitor_notification_matcher_version
+  container_version = var.monitor_notification_matcher_version
   container_port    = local.container_port
 
   # Service configuration
@@ -79,7 +79,7 @@ module "ecs-service" {
 
 module "ecs-service-kafka-v2" {
   count  = var.environment == "cidev" ? 1 : 0
-  source = "git@github.com:companieshouse/terraform-modules//aws/ecs/ecs-service?ref=1.0.324"
+  source = "git@github.com:companieshouse/terraform-modules//aws/ecs/ecs-service?ref=1.0.349"
 
   # Environmental configuration
   environment             = var.environment
@@ -99,7 +99,7 @@ module "ecs-service-kafka-v2" {
   # Docker container details
   docker_registry   = var.docker_registry
   docker_repo       = local.docker_repo
-  container_version = var.chs_monitor_notification_matcher_version
+  container_version = var.monitor_notification_matcher_version
   container_port    = local.container_port
 
   # Service configuration

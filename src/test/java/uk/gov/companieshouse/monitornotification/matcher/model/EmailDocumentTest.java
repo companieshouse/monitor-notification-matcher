@@ -97,5 +97,17 @@ public class EmailDocumentTest {
         document1 = new EmailDocument<>(null, null, null, null, null, "created1");
         document2 = new EmailDocument<>(null, null, null, null, null, "created2");
         assertNotEquals(document1, document2);
+
+        document1 = new EmailDocument<>(null, null, null, null, null, null);
+        document2 = new EmailDocument<>(null, null, null, null, null, null);
+        assertEquals(document1, document2);
+
+        assertEquals(887503681, document1.hashCode());
+        assertEquals(887503681, document2.hashCode());
+        assertEquals(document1.hashCode(), document2.hashCode());
+
+        assertEquals("EmailDocument[appId=<null>,createdAt=<null>,data=<null>,emailAddress=<null>,messageId=<null>,messageType=<null>]", document1.toString());
+        assertEquals("EmailDocument[appId=<null>,createdAt=<null>,data=<null>,emailAddress=<null>,messageId=<null>,messageType=<null>]", document2.toString());
+        assertEquals(document1.toString(), document2.toString());
     }
 }

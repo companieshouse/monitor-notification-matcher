@@ -109,7 +109,7 @@ variable "cloudwatch_alarms_enabled" {
 }
 
 # ------------------------------------------------------------------------------
-# Service environment variable configs
+# Service environment variable configs 
 # ------------------------------------------------------------------------------
 variable "ssm_version_prefix" {
   type        = string
@@ -123,7 +123,7 @@ variable "use_set_environment_files" {
   description = "Toggle default global and shared environment files"
 }
 
-variable "chs_monitor_notification_matcher_version" {
+variable "monitor_notification_matcher_version" {
   type        = string
-  description = "The version of the chs_monitor_notification_matcher container to run."
+  description = "The version of the monitor_notification_matcher container to run."
 }

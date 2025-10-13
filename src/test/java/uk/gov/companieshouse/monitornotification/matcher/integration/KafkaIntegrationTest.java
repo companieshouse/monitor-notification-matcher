@@ -3,9 +3,9 @@ package uk.gov.companieshouse.monitornotification.matcher.integration;
 import static org.hamcrest.MatcherAssert.assertThat;
 import static org.hamcrest.Matchers.is;
 import static org.junit.jupiter.api.Assertions.assertTrue;
-import static uk.gov.companieshouse.monitornotification.matcher.util.NotificationMatchTestUtils.buildFilingUpdateMessage;
+import static uk.gov.companieshouse.monitornotification.matcher.utils.NotificationMatchTestUtils.buildFilingUpdateMessage;
 
-import java.io.IOException;
+import java.util.UUID;
 import java.util.concurrent.CountDownLatch;
 import java.util.concurrent.TimeUnit;
 import monitor.filing;
@@ -18,15 +18,19 @@ import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.kafka.core.KafkaTemplate;
 import org.springframework.kafka.test.context.EmbeddedKafka;
 import org.springframework.messaging.Message;
+import org.springframework.test.annotation.DirtiesContext;
 import org.springframework.test.context.ActiveProfiles;
+import org.springframework.test.context.DynamicPropertyRegistry;
+import org.springframework.test.context.DynamicPropertySource;
 import uk.gov.companieshouse.monitornotification.matcher.consumer.NotificationMatchConsumer;
 
 @SpringBootTest
-@EmbeddedKafka(partitions = 1,
-        topics = { "test-topic" },
+@EmbeddedKafka(
+        partitions = 1,
         brokerProperties = {"listeners=PLAINTEXT://localhost:9092", "port=9092" }
 )
 @TestInstance(TestInstance.Lifecycle.PER_CLASS)
+@DirtiesContext(classMode = DirtiesContext.ClassMode.AFTER_CLASS)
 @ActiveProfiles("test")
 public class KafkaIntegrationTest {
     @Autowired
@@ -35,8 +39,17 @@ public class KafkaIntegrationTest {
     @Autowired
     private NotificationMatchConsumer consumer;
 
+    private static String topicName;
+
     private final CountDownLatch latch = new CountDownLatch(1);
     private filing receivedMessage;
+
+    @DynamicPropertySource
+    static void overrideProperties(final DynamicPropertyRegistry registry) {
+        topicName = "test-topic-" + UUID.randomUUID();
+
+        registry.add("spring.kafka.consumer.notify.topic", () -> topicName);
+    }
 
     @BeforeEach
     void setup() {
@@ -47,10 +60,10 @@ public class KafkaIntegrationTest {
     }
 
     @Test
-    void testMessageIsConsumed() throws IOException, InterruptedException {
+    void testMessageIsConsumed() throws InterruptedException {
         Message<filing> message = buildFilingUpdateMessage();
 
-        kafkaTemplate.send("test-topic", message.getPayload());
+        kafkaTemplate.send(topicName, message.getPayload());
 
         boolean messageConsumed = latch.await(10, TimeUnit.SECONDS);
 

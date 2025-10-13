@@ -8,8 +8,8 @@ import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.times;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
-import static uk.gov.companieshouse.monitornotification.matcher.util.NotificationMatchTestUtils.COMPANY_NUMBER;
-import static uk.gov.companieshouse.monitornotification.matcher.util.NotificationMatchTestUtils.buildCompanyDetails;
+import static uk.gov.companieshouse.monitornotification.matcher.utils.NotificationMatchTestUtils.COMPANY_NUMBER;
+import static uk.gov.companieshouse.monitornotification.matcher.utils.NotificationMatchTestUtils.buildCompanyDetails;
 
 import com.google.api.client.http.HttpHeaders;
 import com.google.api.client.http.HttpResponseException;
@@ -27,6 +27,7 @@ import uk.gov.companieshouse.api.error.ApiErrorResponseException;
 import uk.gov.companieshouse.api.handler.company.PrivateCompanyDetailResourceHandler;
 import uk.gov.companieshouse.api.handler.company.request.PrivateCompanyDetailsGet;
 import uk.gov.companieshouse.api.handler.exception.URIValidationException;
+import uk.gov.companieshouse.api.http.HttpClient;
 import uk.gov.companieshouse.api.model.ApiResponse;
 import uk.gov.companieshouse.logging.Logger;
 import uk.gov.companieshouse.monitornotification.matcher.exception.NonRetryableException;
@@ -52,10 +53,12 @@ public class CompanyServiceTest {
         CompanyDetails companyDetails = buildCompanyDetails();
 
         InternalApiClient client = mock(InternalApiClient.class);
+        HttpClient httpClient = mock(HttpClient.class);
         PrivateCompanyDetailResourceHandler handler = mock(PrivateCompanyDetailResourceHandler.class);
         PrivateCompanyDetailsGet getter = mock(PrivateCompanyDetailsGet.class);
 
         when(supplier.get()).thenReturn(client);
+        when(client.getHttpClient()).thenReturn(httpClient);
         when(client.privateCompanyDetailResourceHandler()).thenReturn(handler);
         when(handler.getCompanyDetails("/company/%s/company-detail".formatted(COMPANY_NUMBER))).thenReturn(getter);
         when(getter.execute()).thenReturn(new ApiResponse<>(200, Map.of(), companyDetails));
@@ -70,6 +73,7 @@ public class CompanyServiceTest {
     @Test
     void givenCompanyNotExists_whenCompanyLookup_thenReturnEmpty() throws ApiErrorResponseException, URIValidationException {
         InternalApiClient client = mock(InternalApiClient.class);
+        HttpClient httpClient = mock(HttpClient.class);
         PrivateCompanyDetailResourceHandler handler = mock(PrivateCompanyDetailResourceHandler.class);
         PrivateCompanyDetailsGet getter = mock(PrivateCompanyDetailsGet.class);
 
@@ -78,6 +82,7 @@ public class CompanyServiceTest {
         );
 
         when(supplier.get()).thenReturn(client);
+        when(client.getHttpClient()).thenReturn(httpClient);
         when(client.privateCompanyDetailResourceHandler()).thenReturn(handler);
         when(handler.getCompanyDetails("/company/%s/company-detail".formatted(COMPANY_NUMBER))).thenReturn(getter);
         when(getter.execute()).thenThrow(exceptionToRaise);
@@ -94,6 +99,7 @@ public class CompanyServiceTest {
     @Test
     void givenUnauthorized_whenCompanyLookup_thenExceptionRaised() throws ApiErrorResponseException, URIValidationException {
         InternalApiClient client = mock(InternalApiClient.class);
+        HttpClient httpClient = mock(HttpClient.class);
         PrivateCompanyDetailResourceHandler handler = mock(PrivateCompanyDetailResourceHandler.class);
         PrivateCompanyDetailsGet getter = mock(PrivateCompanyDetailsGet.class);
 
@@ -102,6 +108,7 @@ public class CompanyServiceTest {
         );
 
         when(supplier.get()).thenReturn(client);
+        when(client.getHttpClient()).thenReturn(httpClient);
         when(client.privateCompanyDetailResourceHandler()).thenReturn(handler);
         when(handler.getCompanyDetails("/company/%s/company-detail".formatted(COMPANY_NUMBER))).thenReturn(getter);
         when(getter.execute()).thenThrow(exceptionToRaise);
@@ -121,12 +128,14 @@ public class CompanyServiceTest {
     @Test
     void givenInvalidURIProvided_whenCompanyLookup_thenExceptionRaised() throws ApiErrorResponseException, URIValidationException {
         InternalApiClient client = mock(InternalApiClient.class);
+        HttpClient httpClient = mock(HttpClient.class);
         PrivateCompanyDetailResourceHandler handler = mock(PrivateCompanyDetailResourceHandler.class);
         PrivateCompanyDetailsGet getter = mock(PrivateCompanyDetailsGet.class);
 
         URIValidationException exceptionToRaise = new URIValidationException("Invalid URI");
 
         when(supplier.get()).thenReturn(client);
+        when(client.getHttpClient()).thenReturn(httpClient);
         when(client.privateCompanyDetailResourceHandler()).thenReturn(handler);
         when(handler.getCompanyDetails("/company/%s/company-detail".formatted(COMPANY_NUMBER))).thenReturn(getter);
         when(getter.execute()).thenThrow(exceptionToRaise);

@@ -5,7 +5,7 @@ import org.springframework.data.mongodb.core.mapping.Document;
 
 @JsonInclude(JsonInclude.Include.NON_NULL)
 @Document(collection = "matches")
-public class MonitorMatchesDocument {
+public class MonitorMatchDocument {
 
     private String appId;
     private String messageId;
@@ -14,7 +14,7 @@ public class MonitorMatchesDocument {
     private String createdAt;
     private String userId;
 
-    public MonitorMatchesDocument(String appId, String messageId, String messageType, String data, String createdAt, String userId) {
+    public MonitorMatchDocument(String appId, String messageId, String messageType, String data, String createdAt, String userId) {
         this.appId = appId;
         this.messageId = messageId;
         this.messageType = messageType;
@@ -23,7 +23,7 @@ public class MonitorMatchesDocument {
         this.userId = userId;
     }
 
-    public MonitorMatchesDocument() {
+    public MonitorMatchDocument() {
         this(null, null, null, null, null, null);
     }
 

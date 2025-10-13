@@ -6,23 +6,23 @@ import static org.hamcrest.Matchers.notNullValue;
 import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.ArgumentMatchers.anyString;
-import static org.mockito.ArgumentMatchers.eq;
+import static org.mockito.Mockito.doNothing;
 import static org.mockito.Mockito.times;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.verifyNoInteractions;
 import static org.mockito.Mockito.when;
-import static uk.gov.companieshouse.monitornotification.matcher.util.NotificationMatchTestUtils.COMPANY_NAME;
-import static uk.gov.companieshouse.monitornotification.matcher.util.NotificationMatchTestUtils.COMPANY_NUMBER;
-import static uk.gov.companieshouse.monitornotification.matcher.util.NotificationMatchTestUtils.COMPANY_STATUS;
-import static uk.gov.companieshouse.monitornotification.matcher.util.NotificationMatchTestUtils.USER_ID;
-import static uk.gov.companieshouse.monitornotification.matcher.util.NotificationMatchTestUtils.buildFilingDeleteMessageWithBlankCompanyNumber;
-import static uk.gov.companieshouse.monitornotification.matcher.util.NotificationMatchTestUtils.buildFilingDeleteMessageWithoutCompanyNumber;
-import static uk.gov.companieshouse.monitornotification.matcher.util.NotificationMatchTestUtils.buildFilingDeleteMessageWithoutIsDelete;
-import static uk.gov.companieshouse.monitornotification.matcher.util.NotificationMatchTestUtils.buildFilingUpdateMessage;
-import static uk.gov.companieshouse.monitornotification.matcher.util.NotificationMatchTestUtils.buildFilingUpdateWithLegacyDescriptionMessage;
+import static uk.gov.companieshouse.monitornotification.matcher.utils.NotificationMatchTestUtils.COMPANY_NAME;
+import static uk.gov.companieshouse.monitornotification.matcher.utils.NotificationMatchTestUtils.COMPANY_NUMBER;
+import static uk.gov.companieshouse.monitornotification.matcher.utils.NotificationMatchTestUtils.COMPANY_STATUS;
+import static uk.gov.companieshouse.monitornotification.matcher.utils.NotificationMatchTestUtils.buildFilingDeleteMessageWithBlankCompanyNumber;
+import static uk.gov.companieshouse.monitornotification.matcher.utils.NotificationMatchTestUtils.buildFilingDeleteMessageWithoutCompanyNumber;
+import static uk.gov.companieshouse.monitornotification.matcher.utils.NotificationMatchTestUtils.buildFilingDeleteMessageWithoutIsDelete;
+import static uk.gov.companieshouse.monitornotification.matcher.utils.NotificationMatchTestUtils.buildFilingUpdateMessage;
+import static uk.gov.companieshouse.monitornotification.matcher.utils.NotificationMatchTestUtils.buildFilingUpdateWithLegacyDescriptionMessage;
 
 import com.fasterxml.jackson.core.JsonParseException;
 import com.fasterxml.jackson.databind.ObjectMapper;
+import java.util.Map;
 import java.util.Optional;
 import monitor.filing;
 import org.junit.jupiter.api.BeforeEach;
@@ -31,14 +31,16 @@ import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
 import org.springframework.messaging.Message;
+import uk.gov.companieshouse.api.chskafka.MessageSend;
 import uk.gov.companieshouse.api.company.CompanyDetails;
+import uk.gov.companieshouse.api.model.ApiResponse;
 import uk.gov.companieshouse.logging.Logger;
 import uk.gov.companieshouse.monitornotification.matcher.config.properties.ExternalLinksProperties;
 import uk.gov.companieshouse.monitornotification.matcher.enumerationshelper.FilingHistoryDescriptionsEnumerationsHelper;
 import uk.gov.companieshouse.monitornotification.matcher.exception.NonRetryableException;
-import uk.gov.companieshouse.monitornotification.matcher.model.EmailDocument;
 import uk.gov.companieshouse.monitornotification.matcher.service.CompanyService;
 import uk.gov.companieshouse.monitornotification.matcher.service.EmailService;
+import uk.gov.companieshouse.monitornotification.matcher.utils.NotificationMatchDataExtractor;
 
 @ExtendWith(MockitoExtension.class)
 public class MessageProcessorTest {
@@ -50,7 +52,7 @@ public class MessageProcessorTest {
     CompanyService companyService;
 
     @Mock
-    FilingHistoryDescriptionsEnumerationsHelper filingHistoryDescriptionsEnumerationsHelper;
+    FilingHistoryDescriptionsEnumerationsHelper helper;
 
     ObjectMapper mapper;
 
@@ -58,6 +60,7 @@ public class MessageProcessorTest {
     Logger logger;
 
     ExternalLinksProperties properties;
+    NotificationMatchDataExtractor extractor;
 
     MessageProcessor underTest;
 
@@ -69,7 +72,9 @@ public class MessageProcessorTest {
         properties.setChsUrl("https://chs-url.companieshouse.gov.uk");
         properties.setMonitorUrl("https://monitor-url.companieshouse.gov.uk");
 
-        underTest = new MessageProcessor(emailService, companyService, mapper, logger, properties, filingHistoryDescriptionsEnumerationsHelper);
+        extractor = new NotificationMatchDataExtractor(mapper, logger);
+
+        underTest = new MessageProcessor(emailService, companyService, logger, properties, helper, extractor);
     }
 
     @Test
@@ -79,7 +84,7 @@ public class MessageProcessorTest {
 
         underTest.processMessage(payload);
 
-        verify(logger, times(3)).trace(anyString());
+        verify(logger, times(4)).trace(anyString());
         verify(logger, times(1)).info("No company number was detected within the notification match payload. Processing aborted!");
         verify(logger, times(1)).debug(anyString());
         verifyNoInteractions(companyService);
@@ -93,9 +98,9 @@ public class MessageProcessorTest {
 
         underTest.processMessage(payload);
 
-        verify(logger, times(3)).trace(anyString());
+        verify(logger, times(4)).trace(anyString());
         verify(logger, times(1)).info("No company number was detected within the notification match payload. Processing aborted!");
-        verify(logger, times(1)).debug(anyString());
+        verify(logger, times(0)).debug(anyString());
         verifyNoInteractions(companyService);
         verifyNoInteractions(emailService);
     }
@@ -109,9 +114,9 @@ public class MessageProcessorTest {
 
         underTest.processMessage(payload);
 
-        verify(logger, times(3)).trace(anyString());
+        verify(logger, times(4)).trace(anyString());
         verify(logger, times(1)).info("No company details were found with company number: [%s]. Processing aborted!".formatted(COMPANY_NUMBER));
-        verify(logger, times(1)).debug(anyString());
+        verify(logger, times(0)).debug(anyString());
         verify(companyService, times(1)).findCompanyDetails(COMPANY_NUMBER);
         verifyNoInteractions(emailService);
     }
@@ -127,15 +132,18 @@ public class MessageProcessorTest {
         companyDetails.setCompanyStatus(COMPANY_STATUS);
 
         when(companyService.findCompanyDetails(COMPANY_NUMBER)).thenReturn(Optional.of(companyDetails));
+        doNothing().when(emailService).saveMatch(any(MessageSend.class));
+        when(emailService.sendEmail(any(MessageSend.class))).thenReturn(new ApiResponse<>(201, Map.of(), null));
 
         underTest.processMessage(payload);
 
-        verify(logger, times(10)).trace(anyString());
-        verify(logger, times(1)).info("The message does not contain a valid is_delete field (defaulting to FALSE).");
-        verify(logger, times(5)).debug(anyString());
+        verify(logger, times(21)).trace(anyString());
+        verify(logger, times(1)).info(anyString());
+        verify(logger, times(2)).debug(anyString());
+
         verify(companyService, times(1)).findCompanyDetails(COMPANY_NUMBER);
-        verify(emailService, times(1)).saveMatch(any(EmailDocument.class), eq(USER_ID));
-        verify(emailService, times(1)).sendEmail(any(EmailDocument.class));
+        verify(emailService, times(1)).saveMatch(any(MessageSend.class));
+        verify(emailService, times(1)).sendEmail(any(MessageSend.class));
     }
 
     @Test
@@ -150,7 +158,7 @@ public class MessageProcessorTest {
         });
 
         assertThat(expectedException, is(notNullValue()));
-        assertThat(expectedException.getMessage(), is("An error occurred while attempting to extract the JsonNode: company_number"));
+        assertThat(expectedException.getMessage(), is("An error occurred while attempting to extract the JsonNode: data"));
         assertThat(expectedException.getCause().getClass(), is(JsonParseException.class));
     }
 
@@ -171,8 +179,8 @@ public class MessageProcessorTest {
         verify(logger, times(10)).trace(anyString());
         verify(logger, times(5)).debug(anyString());
         verify(companyService, times(1)).findCompanyDetails(COMPANY_NUMBER);
-        verify(emailService, times(1)).saveMatch(any(EmailDocument.class), eq(USER_ID));
-        verify(emailService, times(1)).sendEmail(any(EmailDocument.class));
+        verify(emailService, times(1)).saveMatch(any(MessageSend.class));
+        verify(emailService, times(1)).sendEmail(any(MessageSend.class));
     }
 
 }

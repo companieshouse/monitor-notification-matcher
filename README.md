@@ -54,7 +54,35 @@ company.
         - `correlation_id`: (Taken and inserted from the consumed message)
         - `reply_to`: Kafka topic name to send response to
     - Body:
+      ```text
+      No longer used - see CHS Kafka API section below.
+      ```
+
+### Outgoing Messages (CHS Kafka API)
+- *Outgoing messages are POSTED to the CHS Kafka API endpoint named*: `/message-send`
+    - Headers:
+        - `correlation_id`: (Taken and inserted from the consumed message)
+        - `reply_to`: Kafka topic name to send response to
+      - Body:
       ```json
+      {
+            "app_id": "chs-monitor-notification-matcher.filing",
+            "message_id": "msg-001",
+            "message_type": "monitor_email",
+            "data": {
+                "CompanyName": "My Own Company",
+                "CompanyNumber": "00006400",
+                "FilingDate": "24 Feb 2025",
+                "FilingDescription": "TEST FILING EMAIL",
+                "FilingType": "AD01",
+                "IsDelete": false,
+                "MonitorURL": "https://follow.cidev.aws.chdev.org",
+                "from": "test@companieshouse.gov.uk",
+                "subject": "TEST"
+            },
+            "created_at": "2025-02-20T17:00:00Z",
+            "user_id": "1vKD26OwehmZI6MpGz9D02-dmCI"
+      }
       ```
       
 ## Terraform ECS
