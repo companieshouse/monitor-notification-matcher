@@ -10,6 +10,7 @@ import monitor.filing;
 import org.springframework.stereotype.Component;
 import uk.gov.companieshouse.logging.Logger;
 import uk.gov.companieshouse.monitornotification.matcher.exception.NonRetryableException;
+import uk.gov.companieshouse.monitornotification.matcher.filing.ApiEnumerationsHelper;
 import uk.gov.companieshouse.monitornotification.matcher.model.FilingHistory;
 
 @Component
@@ -17,10 +18,12 @@ public class NotificationMatchDataExtractor {
 
     private static final String ERROR_EXTRACTING_JSON_NODE = "An error occurred while attempting to extract the JsonNode: %s";
 
+    private final ApiEnumerationsHelper helper;
     private final ObjectMapper mapper;
     private final Logger logger;
 
-    public NotificationMatchDataExtractor(final ObjectMapper mapper, final Logger logger) {
+    public NotificationMatchDataExtractor(final ApiEnumerationsHelper helper, final ObjectMapper mapper, final Logger logger) {
+        this.helper = helper;
         this.mapper = mapper;
         this.logger = logger;
     }
@@ -60,7 +63,16 @@ public class NotificationMatchDataExtractor {
         logger.trace("getFilingDescription(message=%s) method called.".formatted(message));
 
         JsonNode filingType = getMandatoryNodeValue(findNestedDataNode(message), "description");
-        return filingType.asText();
+        String descriptionKey = filingType.asText();
+
+        // Attempt to translate the description using the description values if they exist.
+        Optional<JsonNode> descriptionValues = getDescriptionValues(message);
+        if(descriptionValues.isEmpty()) {
+            return "";
+        }
+
+        // We have description values, and a description key, so attempt to get the full description.
+        return helper.getFilingHistoryDescription(descriptionKey, descriptionValues.get());
     }
 
     private String getFilingDate(final filing message) {
@@ -68,6 +80,12 @@ public class NotificationMatchDataExtractor {
 
         JsonNode filingType = getMandatoryNodeValue(findNestedDataNode(message), "date");
         return filingType.asText();
+    }
+
+    private Optional<JsonNode> getDescriptionValues(final filing message) {
+        logger.trace("getDescriptionValues(message=%s) method called.".formatted(message));
+
+        return getOptionalNodeValue(findNestedDataNode(message), "description_values");
     }
 
     public Optional<JsonNode> getOptionalNodeValue(final JsonNode node, final String attribute) {

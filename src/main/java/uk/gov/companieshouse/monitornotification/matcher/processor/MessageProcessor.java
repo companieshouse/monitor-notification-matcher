@@ -9,7 +9,7 @@ import uk.gov.companieshouse.api.company.CompanyDetails;
 import uk.gov.companieshouse.api.model.ApiResponse;
 import uk.gov.companieshouse.logging.Logger;
 import uk.gov.companieshouse.monitornotification.matcher.config.properties.ExternalLinksProperties;
-import uk.gov.companieshouse.monitornotification.matcher.enumerationshelper.FilingHistoryDescriptionsEnumerationsHelper;
+import uk.gov.companieshouse.monitornotification.matcher.filing.ApiEnumerationsHelper;
 import uk.gov.companieshouse.monitornotification.matcher.logging.DataMapHolder;
 import uk.gov.companieshouse.monitornotification.matcher.model.FilingHistory;
 import uk.gov.companieshouse.monitornotification.matcher.service.CompanyService;
@@ -23,12 +23,12 @@ public class MessageProcessor {
     private final CompanyService companyService;
     private final Logger logger;
     private final ExternalLinksProperties properties;
-    private final FilingHistoryDescriptionsEnumerationsHelper apiEnumerations;
+    private final ApiEnumerationsHelper apiEnumerations;
     private final NotificationMatchDataExtractor extractor;
 
     public MessageProcessor(final EmailService emailService, final CompanyService companyService, final Logger logger,
             final ExternalLinksProperties properties,
-            final FilingHistoryDescriptionsEnumerationsHelper apiEnumerations,
+            final ApiEnumerationsHelper apiEnumerations,
             final NotificationMatchDataExtractor extractor) {
         this.emailService = emailService;
         this.companyService = companyService;

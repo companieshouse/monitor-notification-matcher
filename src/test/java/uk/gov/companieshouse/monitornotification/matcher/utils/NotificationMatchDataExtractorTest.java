@@ -12,6 +12,7 @@ import static uk.gov.companieshouse.monitornotification.matcher.utils.Notificati
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.databind.node.JsonNodeType;
+import java.util.Map;
 import java.util.Optional;
 import monitor.filing;
 import org.junit.jupiter.api.BeforeEach;
@@ -21,13 +22,16 @@ import org.mockito.junit.jupiter.MockitoExtension;
 import org.springframework.messaging.Message;
 import uk.gov.companieshouse.logging.Logger;
 import uk.gov.companieshouse.logging.LoggerFactory;
+import uk.gov.companieshouse.monitornotification.matcher.config.properties.FilingHistoryDescriptions;
 import uk.gov.companieshouse.monitornotification.matcher.exception.NonRetryableException;
+import uk.gov.companieshouse.monitornotification.matcher.filing.ApiEnumerationsHelper;
 
 @ExtendWith(MockitoExtension.class)
 class NotificationMatchDataExtractorTest {
 
     ObjectMapper mapper;
     Logger logger;
+    ApiEnumerationsHelper helper;
 
     NotificationMatchDataExtractor underTest;
 
@@ -36,7 +40,12 @@ class NotificationMatchDataExtractorTest {
         mapper = new ObjectMapper();
         logger = LoggerFactory.getLogger("test-logger");
 
-        underTest = new NotificationMatchDataExtractor(mapper, logger);
+        Map<String, String> map = Map.of("appoint-person-director-company-with-name-date",
+                "**Appointment** of {officer_name} as a director on {appointment_date}");
+        FilingHistoryDescriptions descriptions = new FilingHistoryDescriptions(map);
+        helper = new ApiEnumerationsHelper(descriptions, mapper, logger);
+
+        underTest = new NotificationMatchDataExtractor(helper,mapper, logger);
     }
 
     @Test

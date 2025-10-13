@@ -291,6 +291,17 @@
           <to>
             <image>416670754337.dkr.ecr.eu-west-2.amazonaws.com/${project.artifactId}:latest</image>
           </to>
+          <extraDirectories>
+            <paths>
+              <path>
+                <from>${project.basedir}/api-enumerations</from>
+                <into>/api-enumerations</into>
+              </path>
+            </paths>
+          </extraDirectories>
+          <container>
+            <expandClasspathDependencies>true</expandClasspathDependencies>
+          </container>
         </configuration>
       </plugin>
 
