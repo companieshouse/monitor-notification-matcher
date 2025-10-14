@@ -1,7 +1,9 @@
 package uk.gov.companieshouse.monitornotification.matcher.processor;
 
+import java.util.Map;
 import java.util.Optional;
 import monitor.filing;
+import org.apache.commons.lang3.StringUtils;
 import org.springframework.stereotype.Component;
 import uk.gov.companieshouse.api.chskafka.MessageSend;
 import uk.gov.companieshouse.api.chskafka.MessageSendData;
@@ -9,7 +11,7 @@ import uk.gov.companieshouse.api.company.CompanyDetails;
 import uk.gov.companieshouse.api.model.ApiResponse;
 import uk.gov.companieshouse.logging.Logger;
 import uk.gov.companieshouse.monitornotification.matcher.config.properties.ExternalLinksProperties;
-import uk.gov.companieshouse.monitornotification.matcher.filing.ApiEnumerationsHelper;
+import uk.gov.companieshouse.monitornotification.matcher.filing.FilingHistoryDescriptionConverter;
 import uk.gov.companieshouse.monitornotification.matcher.logging.DataMapHolder;
 import uk.gov.companieshouse.monitornotification.matcher.model.FilingHistory;
 import uk.gov.companieshouse.monitornotification.matcher.service.CompanyService;
@@ -19,22 +21,24 @@ import uk.gov.companieshouse.monitornotification.matcher.utils.NotificationMatch
 @Component
 public class MessageProcessor {
 
+    private static final String LEGACY_FILING_HISTORY_DESCRIPTION = "legacy";
+
     private final EmailService emailService;
     private final CompanyService companyService;
     private final Logger logger;
     private final ExternalLinksProperties properties;
-    private final ApiEnumerationsHelper apiEnumerations;
+    private final FilingHistoryDescriptionConverter converter;
     private final NotificationMatchDataExtractor extractor;
 
     public MessageProcessor(final EmailService emailService, final CompanyService companyService, final Logger logger,
             final ExternalLinksProperties properties,
-            final ApiEnumerationsHelper apiEnumerations,
+            final FilingHistoryDescriptionConverter converter,
             final NotificationMatchDataExtractor extractor) {
         this.emailService = emailService;
         this.companyService = companyService;
         this.logger = logger;
         this.properties = properties;
-        this.apiEnumerations = apiEnumerations;
+        this.converter = converter;
         this.extractor = extractor;
     }
 
@@ -55,8 +59,15 @@ public class MessageProcessor {
             return;
         }
 
+        // Extract the filing history details from the message supplied.
         var filingHistory = extractor.getFilingHistory(message);
         logger.debug("Filing history created: %s".formatted(filingHistory));
+
+        // We need to convert the filing description if it is parameterised.
+        var descriptionValues = extractor.getDescriptionValues(message);
+        var descriptionKey = filingHistory.getDescription();
+
+        filingHistory.setDescription(convertFilingDescription(descriptionKey, descriptionValues));
 
         // Prepare the email document using the payload and company details.
         var messageSend = createMessageSend(message, companyDetails.get(), filingHistory);
@@ -67,6 +78,21 @@ public class MessageProcessor {
         // Send the email document to the email service for processing.
         ApiResponse<Void> apiResponse = emailService.sendEmail(messageSend);
         logger.info("Message sent to CHS Kafka API successfully: (Status Code: %d)".formatted(apiResponse.getStatusCode()));
+
+    }
+
+    private String convertFilingDescription(final String descriptionKey, final Map<String, String> descriptionValues) {
+        logger.trace("convertFilingDescription(description=%s, descriptionValues=%s) method called."
+                .formatted(descriptionKey, descriptionValues));
+
+        // Check if we are dealing with a "legacy" description, which means we do not translate it.
+        if(StringUtils.equals(LEGACY_FILING_HISTORY_DESCRIPTION, descriptionKey) && descriptionValues.containsKey("description")) {
+            logger.info("Legacy filing history description detected, using description value supplied.");
+            return descriptionValues.get("description");
+        }
+
+        // We have description values, and a description key, so attempt to get the full description.
+        return converter.getFilingHistoryDescription(descriptionKey, descriptionValues);
 
     }
 

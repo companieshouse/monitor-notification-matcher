@@ -3,14 +3,16 @@ package uk.gov.companieshouse.monitornotification.matcher.utils;
 import static java.lang.Boolean.FALSE;
 
 import com.fasterxml.jackson.core.JsonProcessingException;
+import com.fasterxml.jackson.core.type.TypeReference;
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
+import java.util.Collections;
+import java.util.Map;
 import java.util.Optional;
 import monitor.filing;
 import org.springframework.stereotype.Component;
 import uk.gov.companieshouse.logging.Logger;
 import uk.gov.companieshouse.monitornotification.matcher.exception.NonRetryableException;
-import uk.gov.companieshouse.monitornotification.matcher.filing.ApiEnumerationsHelper;
 import uk.gov.companieshouse.monitornotification.matcher.model.FilingHistory;
 
 @Component
@@ -18,12 +20,10 @@ public class NotificationMatchDataExtractor {
 
     private static final String ERROR_EXTRACTING_JSON_NODE = "An error occurred while attempting to extract the JsonNode: %s";
 
-    private final ApiEnumerationsHelper helper;
     private final ObjectMapper mapper;
     private final Logger logger;
 
-    public NotificationMatchDataExtractor(final ApiEnumerationsHelper helper, final ObjectMapper mapper, final Logger logger) {
-        this.helper = helper;
+    public NotificationMatchDataExtractor(final ObjectMapper mapper, final Logger logger) {
         this.mapper = mapper;
         this.logger = logger;
     }
@@ -63,16 +63,7 @@ public class NotificationMatchDataExtractor {
         logger.trace("getFilingDescription(message=%s) method called.".formatted(message));
 
         JsonNode filingType = getMandatoryNodeValue(findNestedDataNode(message), "description");
-        String descriptionKey = filingType.asText();
-
-        // Attempt to translate the description using the description values if they exist.
-        Optional<JsonNode> descriptionValues = getDescriptionValues(message);
-        if(descriptionValues.isEmpty()) {
-            return "";
-        }
-
-        // We have description values, and a description key, so attempt to get the full description.
-        return helper.getFilingHistoryDescription(descriptionKey, descriptionValues.get());
+        return filingType.asText();
     }
 
     private String getFilingDate(final filing message) {
@@ -82,10 +73,17 @@ public class NotificationMatchDataExtractor {
         return filingType.asText();
     }
 
-    private Optional<JsonNode> getDescriptionValues(final filing message) {
+    public Map<String, String> getDescriptionValues(final filing message) {
         logger.trace("getDescriptionValues(message=%s) method called.".formatted(message));
 
-        return getOptionalNodeValue(findNestedDataNode(message), "description_values");
+        Optional<JsonNode> descriptionValues = getOptionalNodeValue(findNestedDataNode(message), "description_values");
+
+        if(descriptionValues.isEmpty()) {
+            logger.debug(String.format("No description values found for message: %s", descriptionValues));
+            return Collections.emptyMap();
+        }
+
+        return mapper.convertValue(descriptionValues.get(), new TypeReference<>() { });
     }
 
     public Optional<JsonNode> getOptionalNodeValue(final JsonNode node, final String attribute) {

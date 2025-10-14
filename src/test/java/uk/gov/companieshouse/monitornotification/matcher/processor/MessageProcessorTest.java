@@ -18,6 +18,7 @@ import static uk.gov.companieshouse.monitornotification.matcher.utils.Notificati
 import static uk.gov.companieshouse.monitornotification.matcher.utils.NotificationMatchTestUtils.buildFilingDeleteMessageWithoutCompanyNumber;
 import static uk.gov.companieshouse.monitornotification.matcher.utils.NotificationMatchTestUtils.buildFilingDeleteMessageWithoutIsDelete;
 import static uk.gov.companieshouse.monitornotification.matcher.utils.NotificationMatchTestUtils.buildFilingUpdateMessage;
+import static uk.gov.companieshouse.monitornotification.matcher.utils.NotificationMatchTestUtils.buildFilingUpdateWithLegacyDescriptionAndEmptyDescriptionValuesMessage;
 import static uk.gov.companieshouse.monitornotification.matcher.utils.NotificationMatchTestUtils.buildFilingUpdateWithLegacyDescriptionMessage;
 
 import com.fasterxml.jackson.core.JsonParseException;
@@ -37,8 +38,9 @@ import uk.gov.companieshouse.api.company.CompanyDetails;
 import uk.gov.companieshouse.api.model.ApiResponse;
 import uk.gov.companieshouse.logging.Logger;
 import uk.gov.companieshouse.monitornotification.matcher.config.properties.ExternalLinksProperties;
+import uk.gov.companieshouse.monitornotification.matcher.config.properties.FilingHistoryDescriptions;
 import uk.gov.companieshouse.monitornotification.matcher.exception.NonRetryableException;
-import uk.gov.companieshouse.monitornotification.matcher.filing.ApiEnumerationsHelper;
+import uk.gov.companieshouse.monitornotification.matcher.filing.FilingHistoryDescriptionConverter;
 import uk.gov.companieshouse.monitornotification.matcher.service.CompanyService;
 import uk.gov.companieshouse.monitornotification.matcher.service.EmailService;
 import uk.gov.companieshouse.monitornotification.matcher.utils.NotificationMatchDataExtractor;
@@ -52,15 +54,13 @@ public class MessageProcessorTest {
     @Mock
     CompanyService companyService;
 
-    @Mock
-    ApiEnumerationsHelper helper;
-
     ObjectMapper mapper;
 
     @Mock
     Logger logger;
 
     ExternalLinksProperties properties;
+    FilingHistoryDescriptionConverter converter;
     NotificationMatchDataExtractor extractor;
 
     MessageProcessor underTest;
@@ -73,9 +73,14 @@ public class MessageProcessorTest {
         properties.setChsUrl("https://chs-url.companieshouse.gov.uk");
         properties.setMonitorUrl("https://monitor-url.companieshouse.gov.uk");
 
-        extractor = new NotificationMatchDataExtractor(helper, mapper, logger);
+        FilingHistoryDescriptions descriptions = new FilingHistoryDescriptions(Map.of(
+                "appoint-person-director-company-with-name-date",
+                "**Appointment** of {officer_name} as a director on {appointment_date}"
+        ));
+        converter = new FilingHistoryDescriptionConverter(descriptions, logger);
+        extractor = new NotificationMatchDataExtractor(mapper, logger);
 
-        underTest = new MessageProcessor(emailService, companyService, logger, properties, helper, extractor);
+        underTest = new MessageProcessor(emailService, companyService, logger, properties, converter, extractor);
     }
 
     @Test
@@ -138,7 +143,7 @@ public class MessageProcessorTest {
 
         underTest.processMessage(payload);
 
-        verify(logger, times(25)).trace(anyString());
+        verify(logger, times(27)).trace(anyString());
         verify(logger, times(1)).info(anyString());
         verify(logger, times(2)).debug(anyString());
 
@@ -164,8 +169,7 @@ public class MessageProcessorTest {
     }
 
     @Test
-    @Disabled
-    void givenValidPayloadWithLegacyDescriptionInDataObject_whenMessageProcessed_thenProcessedOK() {
+    void givenLegacyDescription_whenMessageProcessed_thenProcessedOK() {
         Message<filing> message = buildFilingUpdateWithLegacyDescriptionMessage();
         filing payload = message.getPayload();
 
@@ -175,11 +179,37 @@ public class MessageProcessorTest {
         companyDetails.setCompanyStatus(COMPANY_STATUS);
 
         when(companyService.findCompanyDetails(COMPANY_NUMBER)).thenReturn(Optional.of(companyDetails));
+        doNothing().when(emailService).saveMatch(any(MessageSend.class));
+        when(emailService.sendEmail(any(MessageSend.class))).thenReturn(new ApiResponse<>(201, Map.of(), null));
 
         underTest.processMessage(payload);
 
-        verify(logger, times(10)).trace(anyString());
-        verify(logger, times(5)).debug(anyString());
+        verify(logger, times(26)).trace(anyString());
+        verify(logger, times(1)).debug(anyString());
+        verify(companyService, times(1)).findCompanyDetails(COMPANY_NUMBER);
+        verify(emailService, times(1)).saveMatch(any(MessageSend.class));
+        verify(emailService, times(1)).sendEmail(any(MessageSend.class));
+    }
+
+
+    @Test
+    void givenLegacyDescription_whenDescriptionMissingFromDescriptionValues_thenProcessedOK() {
+        Message<filing> message = buildFilingUpdateWithLegacyDescriptionAndEmptyDescriptionValuesMessage();
+        filing payload = message.getPayload();
+
+        CompanyDetails companyDetails = new CompanyDetails();
+        companyDetails.setCompanyNumber(COMPANY_NUMBER);
+        companyDetails.setCompanyName(COMPANY_NAME);
+        companyDetails.setCompanyStatus(COMPANY_STATUS);
+
+        when(companyService.findCompanyDetails(COMPANY_NUMBER)).thenReturn(Optional.of(companyDetails));
+        doNothing().when(emailService).saveMatch(any(MessageSend.class));
+        when(emailService.sendEmail(any(MessageSend.class))).thenReturn(new ApiResponse<>(201, Map.of(), null));
+
+        underTest.processMessage(payload);
+
+        verify(logger, times(27)).trace(anyString());
+        verify(logger, times(1)).debug(anyString());
         verify(companyService, times(1)).findCompanyDetails(COMPANY_NUMBER);
         verify(emailService, times(1)).saveMatch(any(MessageSend.class));
         verify(emailService, times(1)).sendEmail(any(MessageSend.class));

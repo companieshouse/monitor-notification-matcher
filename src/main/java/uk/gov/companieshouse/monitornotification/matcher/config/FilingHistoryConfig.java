@@ -40,7 +40,7 @@ public class FilingHistoryConfig {
         }
 
         try (InputStream in = yamlResource.getInputStream()) {
-            Object raw = new Yaml().load(in);
+            Object raw = yaml.load(in);
 
             if (!(raw instanceof Map<?, ?>)) {
                 throw new IllegalStateException("Expected YAML root to be a MAP");
@@ -60,7 +60,7 @@ public class FilingHistoryConfig {
             Map<String, String> result = new LinkedHashMap<>();
             for (Map.Entry<String, Object> entry : descRaw.entrySet()) {
                 String key = entry.getKey();
-                String val = (entry.getValue() == null ? null : entry.getValue().toString());
+                String val = entry.getValue().toString();
                 result.put(key, val);
             }
 

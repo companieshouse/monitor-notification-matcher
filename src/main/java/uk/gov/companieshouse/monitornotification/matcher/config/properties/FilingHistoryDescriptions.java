@@ -11,7 +11,7 @@ public class FilingHistoryDescriptions {
     }
 
     public Map<String, String> getDescriptions() {
-        return this.descriptions;
+        return descriptions;
     }
 
 }
