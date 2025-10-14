@@ -1,14 +1,12 @@
 package uk.gov.companieshouse.monitornotification.matcher.config;
 
 import java.io.IOException;
-import java.io.InputStream;
 import java.util.LinkedHashMap;
 import java.util.Map;
 import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.context.ApplicationContext;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
-import org.springframework.core.io.Resource;
 import org.springframework.core.io.ResourceLoader;
 import org.yaml.snakeyaml.Yaml;
 import uk.gov.companieshouse.logging.Logger;
@@ -33,14 +31,14 @@ public class FilingHistoryConfig {
 
         // The YAML resource resides outside our project (git submodule), but is located
         // at the root of our project (i.e. is at the same level as src/, target/, pom.xml etc).
-        Resource yamlResource = loader.getResource(FILING_HISTORY_FILE_NAME);
+        var yamlResource = loader.getResource(FILING_HISTORY_FILE_NAME);
 
         if (!yamlResource.exists()) {
             throw new IllegalStateException("YAML file not found at: " + FILING_HISTORY_FILE_NAME);
         }
 
-        try (InputStream in = yamlResource.getInputStream()) {
-            Object raw = yaml.load(in);
+        try (var in = yamlResource.getInputStream()) {
+            var raw = yaml.load(in);
 
             if (!(raw instanceof Map<?, ?>)) {
                 throw new IllegalStateException("Expected YAML root to be a MAP");
@@ -49,7 +47,7 @@ public class FilingHistoryConfig {
             @SuppressWarnings("unchecked")
             Map<String, Object> root = (Map<String, Object>) raw;
 
-            Object descObj = root.get("description");
+            var descObj = root.get("description");
             if (!(descObj instanceof Map<?, ?>)) {
                 throw new IllegalStateException("'description' section missing or not a map");
             }
@@ -59,8 +57,8 @@ public class FilingHistoryConfig {
 
             Map<String, String> result = new LinkedHashMap<>();
             for (Map.Entry<String, Object> entry : descRaw.entrySet()) {
-                String key = entry.getKey();
-                String val = entry.getValue().toString();
+                var key = entry.getKey();
+                var val = entry.getValue().toString();
                 result.put(key, val);
             }
 
@@ -70,7 +68,7 @@ public class FilingHistoryConfig {
 
         } catch (IOException ex) {
             logger.error("Error reading YAML file", ex);
-            throw new RuntimeException("Error reading external YAML file", ex);
+            throw new IllegalStateException("Error reading external YAML file", ex);
         }
     }
 

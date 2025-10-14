@@ -25,7 +25,7 @@ import uk.gov.companieshouse.logging.Logger;
 import uk.gov.companieshouse.monitornotification.matcher.config.properties.FilingHistoryDescriptions;
 
 @ExtendWith(MockitoExtension.class)
-public class FilingHistoryConfigTest {
+class FilingHistoryConfigTest {
 
     private static final String FILING_HISTORY_FILE_NAME = "file:api-enumerations/filing_history_descriptions.yml";
 
@@ -49,7 +49,7 @@ public class FilingHistoryConfigTest {
     }
 
     @Test
-    public void givenContextLoaded_whenPropertiesPopulated_thenMapReturned() {
+    void givenContextLoaded_whenPropertiesPopulated_thenMapReturned() {
         FilingHistoryDescriptions descriptions = new FilingHistoryDescriptions(Map.of("key", "value"));
 
         assertThat(descriptions, is(notNullValue()));
@@ -58,7 +58,7 @@ public class FilingHistoryConfigTest {
     }
 
     @Test
-    public void givenResourceNotExists_whenPropertiesLoaded_thenRaiseException() {
+    void givenResourceNotExists_whenPropertiesLoaded_thenRaiseException() {
         when(resourceLoader.getResource(anyString())).thenReturn(resource);
         when(resource.exists()).thenReturn(false);
 
@@ -71,7 +71,7 @@ public class FilingHistoryConfigTest {
     }
 
     @Test
-    public void givenResourceExists_whenWrongStructure_thenRaiseException() throws IOException {
+    void givenResourceExists_whenWrongStructure_thenRaiseException() throws IOException {
         when(resourceLoader.getResource(anyString())).thenReturn(resource);
         when(resource.exists()).thenReturn(true);
         when(resource.getInputStream()).thenReturn(InputStream.nullInputStream());
@@ -88,7 +88,7 @@ public class FilingHistoryConfigTest {
     }
 
     @Test
-    public void givenResourceExists_whenDescriptionMissing_thenRaiseException() throws IOException {
+    void givenResourceExists_whenDescriptionMissing_thenRaiseException() throws IOException {
         when(resourceLoader.getResource(anyString())).thenReturn(resource);
         when(resource.exists()).thenReturn(true);
         when(resource.getInputStream()).thenReturn(InputStream.nullInputStream());
@@ -105,7 +105,7 @@ public class FilingHistoryConfigTest {
     }
 
     @Test
-    public void givenInputStreamAvailable_whenIOExceptionRaised_thenRaiseRuntimeException() throws IOException {
+    void givenInputStreamAvailable_whenIOExceptionRaised_thenRaiseRuntimeException() throws IOException {
         when(resourceLoader.getResource(anyString())).thenReturn(resource);
         when(resource.exists()).thenReturn(true);
         when(resource.getInputStream()).thenThrow(FileNotFoundException.class);
@@ -116,5 +116,6 @@ public class FilingHistoryConfigTest {
 
         assertThat(expectedException, is(notNullValue()));
         assertThat(expectedException.getMessage(), is("Error reading external YAML file"));
+        assertThat(expectedException.getClass(), is(IllegalStateException.class));
     }
 }
