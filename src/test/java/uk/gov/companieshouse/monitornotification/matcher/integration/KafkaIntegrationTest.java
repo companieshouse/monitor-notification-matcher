@@ -33,7 +33,6 @@ import uk.gov.companieshouse.monitornotification.matcher.consumer.NotificationMa
 @DirtiesContext(classMode = DirtiesContext.ClassMode.AFTER_CLASS)
 @ActiveProfiles("test")
 public class KafkaIntegrationTest {
-
     @Autowired
     private KafkaTemplate<String, Object> kafkaTemplate;
 

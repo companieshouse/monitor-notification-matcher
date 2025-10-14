@@ -6,7 +6,7 @@ public class FilingHistory {
     private String description;
     private String date;
 
-    public FilingHistory(String type, String description, String date) {
+    public FilingHistory(final String type, final String description, final String date) {
         this.type = type;
         this.description = description;
         this.date = date;

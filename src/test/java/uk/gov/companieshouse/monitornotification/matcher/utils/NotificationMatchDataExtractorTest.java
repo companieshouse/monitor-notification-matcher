@@ -8,10 +8,12 @@ import static org.hamcrest.Matchers.notNullValue;
 import static org.junit.jupiter.api.Assertions.assertThrows;
 import static uk.gov.companieshouse.monitornotification.matcher.utils.NotificationMatchTestUtils.buildFilingDeleteMessageWithoutCompanyNumber;
 import static uk.gov.companieshouse.monitornotification.matcher.utils.NotificationMatchTestUtils.buildFilingUpdateMessage;
+import static uk.gov.companieshouse.monitornotification.matcher.utils.NotificationMatchTestUtils.buildFilingUpdateWithLegacyDescriptionAndMissingDescriptionValuesMessage;
 
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.databind.node.JsonNodeType;
+import java.util.Map;
 import java.util.Optional;
 import monitor.filing;
 import org.junit.jupiter.api.BeforeEach;
@@ -22,6 +24,7 @@ import org.springframework.messaging.Message;
 import uk.gov.companieshouse.logging.Logger;
 import uk.gov.companieshouse.logging.LoggerFactory;
 import uk.gov.companieshouse.monitornotification.matcher.exception.NonRetryableException;
+import uk.gov.companieshouse.monitornotification.matcher.model.FilingHistory;
 
 @ExtendWith(MockitoExtension.class)
 class NotificationMatchDataExtractorTest {
@@ -184,5 +187,29 @@ class NotificationMatchDataExtractorTest {
 
         assertThat(expectedException, is(notNullValue()));
         assertThat(expectedException.getMessage(), is("An error occurred while attempting to extract the JsonNode: data"));
+    }
+
+    @Test
+    void givenMissingNode_whenGetDescriptionValues_thenReturnEmptyMap() {
+        Message<filing> message = buildFilingUpdateWithLegacyDescriptionAndMissingDescriptionValuesMessage();
+        filing payload = message.getPayload();
+
+        Map<String, String> result = underTest.getDescriptionValues(payload);
+
+        assertThat(result, is(notNullValue()));
+        assertThat(result.isEmpty(), is(TRUE));
+    }
+
+    @Test
+    void givenMissingDescriptionValues_whenGetFilingHistory_thenReturnValues() {
+        Message<filing> message = buildFilingUpdateWithLegacyDescriptionAndMissingDescriptionValuesMessage();
+        filing payload = message.getPayload();
+
+        FilingHistory result = underTest.getFilingHistory(payload);
+
+        assertThat(result, is(notNullValue()));
+        assertThat(result.getType(), is("AP01"));
+        assertThat(result.getDescription(), is("legacy"));
+        assertThat(result.getDate(), is("2025-02-04"));
     }
 }

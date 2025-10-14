@@ -3,8 +3,11 @@ package uk.gov.companieshouse.monitornotification.matcher.utils;
 import static java.lang.Boolean.FALSE;
 
 import com.fasterxml.jackson.core.JsonProcessingException;
+import com.fasterxml.jackson.core.type.TypeReference;
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
+import java.util.Collections;
+import java.util.Map;
 import java.util.Optional;
 import monitor.filing;
 import org.springframework.stereotype.Component;
@@ -68,6 +71,19 @@ public class NotificationMatchDataExtractor {
 
         JsonNode filingType = getMandatoryNodeValue(findNestedDataNode(message), "date");
         return filingType.asText();
+    }
+
+    public Map<String, String> getDescriptionValues(final filing message) {
+        logger.trace("getDescriptionValues(message=%s) method called.".formatted(message));
+
+        Optional<JsonNode> descriptionValues = getOptionalNodeValue(findNestedDataNode(message), "description_values");
+
+        if(descriptionValues.isEmpty()) {
+            logger.debug(String.format("No description values found for message: %s", descriptionValues));
+            return Collections.emptyMap();
+        }
+
+        return mapper.convertValue(descriptionValues.get(), new TypeReference<>() { });
     }
 
     public Optional<JsonNode> getOptionalNodeValue(final JsonNode node, final String attribute) {
