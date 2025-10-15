@@ -85,10 +85,12 @@ company.
       }
       ```
       
+## Sonar Analysis
+The code is regularly run through the quality gate, which can be found here: [Sonar Analysis](https://code-analysis.platform.aws.chdev.org/dashboard?id=uk.gov.companieshouse%3Amonitor-notification-matcher)
+
 ## Terraform ECS
 
 ### What does this code do?
-
 The code present in this repository is used to define and deploy a dockerised container in AWS ECS.
 This is done by calling a [module](https://github.com/companieshouse/terraform-modules/tree/main/aws/ecs) from terraform-modules. Application specific attributes are injected and the service is then deployed using Terraform via the CICD platform 'Concourse'.
 
@@ -97,7 +99,7 @@ Application specific attributes | Value                                | Descrip
 :---------|:-----------------------------------------------------------------------------|:-----------
 **ECS Cluster**        |follow                                      | ECS cluster (stack) the service belongs to
 **Load balancer**      |N/A <br> consumer                                            | The load balancer that sits in front of the service
-**Concourse pipeline**     |[Pipeline link](https://ci-platform.companieshouse.gov.uk/teams/team-development/pipelines/chs-monitor-notification-matcher) <br> [Pipeline code](https://github.com/companieshouse/ci-pipelines/blob/master/pipelines/ssplatform/team-development/chs-monitor-notification-matcher)                                  | Concourse pipeline link in shared services
+**Concourse pipeline**     |[Pipeline link](https://ci-platform.companieshouse.gov.uk/teams/team-development/pipelines/monitor-notification-matcher) <br> [Pipeline code](https://github.com/companieshouse/ci-pipelines/blob/master/pipelines/ssplatform/team-development/monitor-notification-matcher)                                  | Concourse pipeline link in shared services
 
 
 ### Contributing
