@@ -30,11 +30,16 @@ spring:
 
 management:
   endpoints:
-    web.exposure.include: health
+    enabled-by-default: false
+    web:
+      exposure:
+        include: "health"
+      base-path: /monitor-notification-matcher
+      path-mapping:
+        health: healthcheck
   endpoint:
-    health.show-details: always
-  health:
-    defaults.enabled: true
+    health:
+      enabled: true
   server:
     port: 8082
 
