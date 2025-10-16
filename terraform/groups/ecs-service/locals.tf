@@ -4,7 +4,6 @@ locals {
   name_prefix                = "${local.stack_name}-${var.environment}"
   global_prefix              = "global-${var.environment}"
   service_name               = "monitor-notification-matcher"
-  v2_service_name            = "monitor-notification-matcher-kafka-v2"
   container_port             = "8080"
   docker_repo                = "monitor-notification-matcher"
   kms_alias                  = "alias/${var.aws_profile}/environment-services-kms"
@@ -62,11 +61,5 @@ locals {
 
   task_environment = concat(local.ssm_global_version_map,local.ssm_service_version_map, [
     { name : "PORT", value : local.container_port }
-  ])
-
-  v2_task_environment = concat(local.ssm_global_version_map,local.ssm_service_version_map, [
-    { name : "PORT", value : local.container_port },
-    { name : "KAFKA_BROKER_ADDR", value : local.kafka3_broker_address },
-    { name : "NOTIFICATION_MATCH_TOPIC", value : local.kafka3_notification_match_topic }
   ])
 }
