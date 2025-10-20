@@ -20,18 +20,28 @@ public class ApiClientConfigTest {
 
     @BeforeEach
     public void setUp() {
-        underTest = new ApiClientConfig("http://example.com", "test-api-key",
-                LoggerFactory.getLogger("test-logger"));
+        underTest = new ApiClientConfig(LoggerFactory.getLogger("test-logger"));
     }
 
     @Test
-    public void testApiClientConfig() {
-        Supplier<InternalApiClient> result = underTest.internalApiClientSupplier();
+    public void testPrivateApiClientConfig() {
+        Supplier<InternalApiClient> result = underTest.internalPrivateApiClientSupplier("http://private-api.localhost", "private-api-key");
 
         assertThat(result, is(notNullValue()));
         assertThat(result.get(), is(notNullValue()));
 
-        assertThat(result.get().getInternalBasePath(), is("http://example.com"));
+        assertThat(result.get().getInternalBasePath(), is("http://private-api.localhost"));
+        assertThat(result.get().getHttpClient().getClass(), is(ApiKeyHttpClient.class));
+    }
+
+    @Test
+    public void testKafkaApiClientConfig() {
+        Supplier<InternalApiClient> result = underTest.internalKafkaApiClientSupplier("http://kafka-api.localhost", "kafka-api-key");
+
+        assertThat(result, is(notNullValue()));
+        assertThat(result.get(), is(notNullValue()));
+
+        assertThat(result.get().getBasePath(), is("http://kafka-api.localhost"));
         assertThat(result.get().getHttpClient().getClass(), is(ApiKeyHttpClient.class));
     }
 }

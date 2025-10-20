@@ -14,9 +14,14 @@ spring:
         concurrency: ${CONCURRENT_LISTENER_INSTANCES:1}
 
   internal:
-    api:
-      url: ${PRIVATE_API_URL:http://api.chs.local:4001}
-      key: ${CHS_INTERNAL_API_KEY:default-internal-api-key}
+    private:
+      api:
+        url: ${PRIVATE_API_URL:http://api.chs.local:4001}
+        key: ${CHS_INTERNAL_API_KEY:default-internal-api-key}
+    kafka:
+      api:
+        url: ${CHS_KAFKA_API_URL:http://api.chs.local:4001}
+        key: ${CHS_KAFKA_API_KEY:default-internal-api-key}
 
   external:
     links:
