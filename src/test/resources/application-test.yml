@@ -19,7 +19,7 @@ spring:
 
   internal:
     api:
-      url: ${PRIVATE_API_URL:http://localhost:4081}
+      url: ${CHS_KAFKA_API_URL:http://localhost:4081}
       key: ${CHS_INTERNAL_API_KEY:g9yZIA81Zo9J46Kzp3JPbfld6kOqxR47EAYqXbRV}
 
   external:
