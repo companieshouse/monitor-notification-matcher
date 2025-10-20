@@ -41,7 +41,7 @@ public class ApiClientConfig {
             @Value("${spring.internal.kafka.api.key}") String apiKey) {
         logger.trace("internalKafkaApiClientSupplier(url=%s) method called.".formatted(apiUrl));
 
-        // Company Profile API
+        // CHS Kafka API
         return () -> {
             var client = new InternalApiClient(new ApiKeyHttpClient(apiKey));
             client.setBasePath(apiUrl);
