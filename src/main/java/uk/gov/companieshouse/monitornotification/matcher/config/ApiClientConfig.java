@@ -11,30 +11,40 @@ import uk.gov.companieshouse.logging.Logger;
 @Configuration
 public class ApiClientConfig {
 
-    private final String internalApiUrl;
-    private final String internalApiKey;
-
     private final Logger logger;
 
     /**
      * Constructor.
      */
-    public ApiClientConfig(@Value("${spring.internal.api.url}") String internalApiUrl,
-            @Value("${spring.internal.api.key}") String internalApiKey,
-            final Logger logger) {
-        this.internalApiUrl = internalApiUrl;
-        this.internalApiKey = internalApiKey;
+    public ApiClientConfig(final Logger logger) {
         this.logger = logger;
     }
 
-    @Bean("internalApiClientSupplier")
-    public Supplier<InternalApiClient> internalApiClientSupplier() {
-        logger.trace("internalApiClientSupplier(url=%s) method called.".formatted(internalApiUrl));
+    @Bean("internalPrivateApiClientSupplier")
+    public Supplier<InternalApiClient> internalPrivateApiClientSupplier(
+            @Value("${spring.internal.private.api.url}") String apiUrl,
+            @Value("${spring.internal.private.api.key}") String apiKey) {
+        logger.trace("internalPrivateApiClientSupplier(url=%s) method called.".formatted(apiUrl));
 
+        // Company Profile API
         return () -> {
-            var client = new InternalApiClient(new ApiKeyHttpClient(internalApiKey));
-            client.setBasePath(internalApiUrl); // CHS Kafka API
-            client.setInternalBasePath(internalApiUrl); // Company Profile API
+            var client = new InternalApiClient(new ApiKeyHttpClient(apiKey));
+            client.setInternalBasePath(apiUrl);
+
+            return client;
+        };
+    }
+
+    @Bean("internalKafkaApiClientSupplier")
+    public Supplier<InternalApiClient> internalKafkaApiClientSupplier(
+            @Value("${spring.internal.kafka.api.url}") String apiUrl,
+            @Value("${spring.internal.kafka.api.key}") String apiKey) {
+        logger.trace("internalKafkaApiClientSupplier(url=%s) method called.".formatted(apiUrl));
+
+        // CHS Kafka API
+        return () -> {
+            var client = new InternalApiClient(new ApiKeyHttpClient(apiKey));
+            client.setBasePath(apiUrl);
 
             return client;
         };

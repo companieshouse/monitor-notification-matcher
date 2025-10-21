@@ -3,6 +3,7 @@ package uk.gov.companieshouse.monitornotification.matcher.service;
 import java.util.Optional;
 import java.util.UUID;
 import java.util.function.Supplier;
+import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.http.HttpStatus;
 import org.springframework.stereotype.Service;
 import uk.gov.companieshouse.api.InternalApiClient;
@@ -20,7 +21,7 @@ public class CompanyService {
     private final Supplier<InternalApiClient> supplier;
     private final Logger logger;
 
-    public CompanyService(final Supplier<InternalApiClient> supplier, final Logger logger) {
+    public CompanyService(@Qualifier("internalPrivateApiClientSupplier") final Supplier<InternalApiClient> supplier, final Logger logger) {
         this.supplier = supplier;
         this.logger = logger;
     }

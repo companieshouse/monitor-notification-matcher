@@ -5,6 +5,7 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 import java.util.Optional;
 import java.util.UUID;
 import java.util.function.Supplier;
+import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.stereotype.Service;
 import uk.gov.companieshouse.api.InternalApiClient;
 import uk.gov.companieshouse.api.chskafka.MessageSend;
@@ -24,7 +25,7 @@ public class EmailService {
     private final ObjectMapper mapper;
     private final Logger logger;
 
-    public EmailService(final Supplier<InternalApiClient> supplier, final MonitorMatchesRepository repository,
+    public EmailService(@Qualifier("internalKafkaApiClientSupplier") final Supplier<InternalApiClient> supplier, final MonitorMatchesRepository repository,
             final ObjectMapper mapper, final Logger logger) {
         this.supplier = supplier;
         this.repository = repository;
