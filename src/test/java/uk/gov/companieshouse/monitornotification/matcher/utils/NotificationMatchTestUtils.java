@@ -23,12 +23,12 @@ public class NotificationMatchTestUtils {
     public static final String USER_ID = "1vKD26OwehmZI6MpGz9D02-dmCI";
     public static final String CREATED_AT = "1453896191000";
     public static final String MESSAGE_ID = "a827f970-d24b-4320-b174-dd5c79327940";
-    public static final String APP_ID = "chs-monitor-notification-matcher.filing";
+    public static final String APP_ID = "monitor-notification-matcher.filing";
     public static final String DATA_PAYLOAD = "{\"type\":\"AP01\",\"description\":\"appoint-person-director-company-with-name-date\",\"description_values\":{\"appointment_date\":\"1 December 2024\",\"officer_name\":\"DR AMIDAT DUPE IYIOLA\"},\"links\":{\"self\":\"/transactions/158153-915517-386847/officers/67a2396e8e70c90c76a3ba62\"},\"category\": \"officers\",\"paper_filed\":false,\"subcategory\":\"appointments\",\"action_date\":\"2025-02-04\",\"date\":\"2025-02-04\"}";
 
     private static final String NOTIFICATION_MATCH_UPDATE_DATA = """
             {
-                "app_id": "chs-monitor-notification-matcher.filing",
+                "app_id": "monitor-notification-matcher.filing",
                 "company_number": "%s",
                 "data": {
                   "type": "AP01",
@@ -53,7 +53,7 @@ public class NotificationMatchTestUtils {
 
     private static final String NOTIFICATION_MATCH_UPDATE_DATA_LEGACY_DESCRIPTION = """
             {
-                "app_id": "chs-monitor-notification-matcher.filing",
+                "app_id": "monitor-notification-matcher.filing",
                 "company_number": "%s",
                 "data": {
                   "type": "AP01",
@@ -76,7 +76,7 @@ public class NotificationMatchTestUtils {
 
     private static final String NOTIFICATION_MATCH_UPDATE_DATA_WITHOUT_DESCRIPTION_VALUES = """
             {
-                "app_id": "chs-monitor-notification-matcher.filing",
+                "app_id": "monitor-notification-matcher.filing",
                 "company_number": "%s",
                 "data": {
                   "type": "AP01",
@@ -96,7 +96,7 @@ public class NotificationMatchTestUtils {
 
     private static final String NOTIFICATION_MATCH_UPDATE_DATA_WITH_LEGACY_EMPTY_DESCRIPTION_VALUES = """
             {
-                "app_id": "chs-monitor-notification-matcher.filing",
+                "app_id": "monitor-notification-matcher.filing",
                 "company_number": "%s",
                 "data": {
                   "type": "AP01",
@@ -120,7 +120,7 @@ public class NotificationMatchTestUtils {
 
     private static final String NOTIFICATION_MATCH_DELETE_DATA = """
             {
-                "app_id": "chs-monitor-notification-matcher.filing",
+                "app_id": "monitor-notification-matcher.filing",
                 "company_number": "%s",
                 "data": {
                   "type": "AP01",
@@ -144,7 +144,7 @@ public class NotificationMatchTestUtils {
 
     private static final String NOTIFICATION_MATCH_DELETE_DATA_WITHOUT_IS_DELETE = """
             {
-                "app_id": "chs-monitor-notification-matcher.filing",
+                "app_id": "monitor-notification-matcher.filing",
                 "company_number": "%s",
                 "data": {
                   "type": "AP01",
@@ -167,7 +167,7 @@ public class NotificationMatchTestUtils {
 
     private static final String NOTIFICATION_MATCH_DELETE_DATA_WITHOUT_COMPANY_NUMBER = """
             {
-                "app_id": "chs-monitor-notification-matcher.filing",
+                "app_id": "monitor-notification-matcher.filing",
                 "data": {
                   "company_name": null,
                   "type": "AP01",
