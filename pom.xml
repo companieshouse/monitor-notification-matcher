@@ -41,7 +41,7 @@
     <skip.integration.tests>false</skip.integration.tests>
 
     <!--companies house-->
-    <private-api-sdk-java.version>4.0.385</private-api-sdk-java.version>
+    <private-api-sdk-java.version>4.0.435</private-api-sdk-java.version>
     <sdk-manager-java.version>3.0.11</sdk-manager-java.version>
     <structured-logging.version>3.0.39</structured-logging.version>
     <ch-kafka.version>3.0.3</ch-kafka.version>
@@ -58,6 +58,8 @@
     <sonar.projectName>monitor-notification-matcher</sonar.projectName>
     <sonar.projectKey>uk.gov.companieshouse:monitor-notification-matcher</sonar.projectKey>
     <sonar.token>${CODE_ANALYSIS_TOKEN}</sonar.token>
+    <sonar.login></sonar.login>
+    <sonar.password></sonar.password>
   </properties>
 
   <dependencyManagement>

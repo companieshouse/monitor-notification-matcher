@@ -22,7 +22,7 @@ company.
       ```json
       {
           "data": {
-              "app_id": "chs-monitor-notification-matcher.filing",
+              "app_id": "monitor-notification-matcher.filing",
               "company_number": "00006400",
               "data": {
                   "type": "AP01",
@@ -66,7 +66,7 @@ company.
       - Body:
       ```json
       {
-            "app_id": "chs-monitor-notification-matcher.filing",
+            "app_id": "monitor-notification-matcher.filing",
             "message_id": "msg-001",
             "message_type": "monitor_email",
             "data": {
