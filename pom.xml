@@ -58,6 +58,8 @@
     <sonar.projectName>monitor-notification-matcher</sonar.projectName>
     <sonar.projectKey>uk.gov.companieshouse:monitor-notification-matcher</sonar.projectKey>
     <sonar.token>${CODE_ANALYSIS_TOKEN}</sonar.token>
+    <sonar.login></sonar.login>
+    <sonar.password></sonar.password>
   </properties>
 
   <dependencyManagement>
