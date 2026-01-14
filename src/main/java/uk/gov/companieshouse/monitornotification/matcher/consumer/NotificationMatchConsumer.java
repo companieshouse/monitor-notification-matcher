@@ -3,11 +3,7 @@ package uk.gov.companieshouse.monitornotification.matcher.consumer;
 import java.util.function.Consumer;
 import monitor.filing;
 import org.springframework.kafka.annotation.KafkaListener;
-import org.springframework.kafka.annotation.RetryableTopic;
-import org.springframework.kafka.retrytopic.DltStrategy;
-import org.springframework.kafka.retrytopic.SameIntervalTopicReuseStrategy;
 import org.springframework.messaging.Message;
-import org.springframework.retry.annotation.Backoff;
 import org.springframework.stereotype.Component;
 import uk.gov.companieshouse.logging.Logger;
 import uk.gov.companieshouse.monitornotification.matcher.exception.NonRetryableException;
@@ -46,16 +42,6 @@ public class NotificationMatchConsumer {
             groupId = "${spring.kafka.consumer.notify.group-id}",
             autoStartup = "true"
     )
-    @RetryableTopic(
-            attempts = "${spring.kafka.consumer.notify.max-attempts}",
-            autoCreateTopics = "false",
-            backoff = @Backoff(delayExpression = "${spring.kafka.consumer.notify.backoff-delay}"),
-            dltTopicSuffix = "-error",
-            dltStrategy = DltStrategy.FAIL_ON_ERROR,
-            sameIntervalTopicReuseStrategy = SameIntervalTopicReuseStrategy.SINGLE_TOPIC,
-            include = RetryableException.class,
-            kafkaTemplate = "kafkaTemplate"
-    )
 
     public void consume(final Message<filing> message) {
         logger.debug("consume(message=%s) method called.".formatted(message));
@@ -84,4 +70,3 @@ public class NotificationMatchConsumer {
     }
 
 }
-
