@@ -41,7 +41,6 @@ public class NotificationMatchConsumer {
      * @param message A message containing a payload.
      */
     @KafkaListener(
-            id = "${spring.kafka.consumer.notify.group-id}",
             containerFactory = "kafkaListenerContainerFactory",
             topics = "${spring.kafka.consumer.notify.topic}",
             groupId = "${spring.kafka.consumer.notify.group-id}",
