@@ -19,9 +19,13 @@ import org.springframework.kafka.core.DefaultKafkaProducerFactory;
 import org.springframework.kafka.core.KafkaTemplate;
 import org.springframework.kafka.core.ProducerFactory;
 import org.springframework.kafka.listener.ContainerProperties;
+import org.springframework.kafka.retrytopic.DltStrategy;
+import org.springframework.kafka.retrytopic.RetryTopicConfiguration;
+import org.springframework.kafka.retrytopic.RetryTopicConfigurationBuilder;
 import org.springframework.kafka.support.serializer.ErrorHandlingDeserializer;
 import uk.gov.companieshouse.logging.Logger;
 import uk.gov.companieshouse.monitornotification.matcher.config.properties.NotificationMatchConsumerProperties;
+import uk.gov.companieshouse.monitornotification.matcher.exception.RetryableException;
 import uk.gov.companieshouse.monitornotification.matcher.exception.RetryableTopicErrorInterceptor;
 import uk.gov.companieshouse.monitornotification.matcher.serdes.GenericSerializer;
 import uk.gov.companieshouse.monitornotification.matcher.serdes.NotificationMatchDeserializer;
@@ -105,4 +109,21 @@ public class KafkaConfig {
         return factory;
     }
 
+    @Bean
+    public RetryTopicConfiguration retryTopicConfiguration(
+            KafkaTemplate<String, Object> template,
+            @Value("${spring.kafka.consumer.notify.max-attempts}") int attempts,
+            @Value("${spring.kafka.consumer.notify.backoff-delay}") int delay) {
+        return RetryTopicConfigurationBuilder
+                .newInstance()
+                .doNotAutoCreateRetryTopics()
+                .maxAttempts(attempts)
+                .fixedBackOff(delay)
+                .useSingleTopicForSameIntervals()
+                .retryTopicSuffix("-retry")
+                .dltSuffix("-error")
+                .dltProcessingFailureStrategy(DltStrategy.FAIL_ON_ERROR)
+                .retryOn(RetryableException.class)
+                .create(template);
+    }
 }
