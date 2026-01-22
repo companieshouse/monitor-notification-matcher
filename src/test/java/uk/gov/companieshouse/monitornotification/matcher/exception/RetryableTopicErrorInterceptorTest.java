@@ -57,7 +57,7 @@ public class RetryableTopicErrorInterceptorTest {
         underTest.configure(Map.of());
 
         Message<filing> filingMessage = buildFilingUpdateMessage();
-        ProducerRecord<String, Object> onSendRecord = new ProducerRecord<>("test-topic-error", "test-key", filingMessage.getPayload());
+        ProducerRecord<String, Object> onSendRecord = new ProducerRecord<>("test-topic-dlt-error", "test-key", filingMessage.getPayload());
 
         ProducerRecord<String, Object> result = underTest.onSend(onSendRecord);
 
@@ -65,7 +65,7 @@ public class RetryableTopicErrorInterceptorTest {
         underTest.close();
 
         assertThat(result, is(notNullValue()));
-        assertThat(result.topic(), is("test-topic-error"));
+        assertThat(result.topic(), is("test-topic-dlt-error"));
         assertThat(result.key(), is("test-key"));
         assertThat(result.value(), is(filingMessage.getPayload()));
 
@@ -82,7 +82,7 @@ public class RetryableTopicErrorInterceptorTest {
                 new RecordHeader(EXCEPTION_CAUSE_FQCN, NonRetryableErrorException.class.getName().getBytes())
         );
 
-        ProducerRecord<String, Object> onSendRecord = new ProducerRecord<>("test-topic-error", 1,
+        ProducerRecord<String, Object> onSendRecord = new ProducerRecord<>("test-topic-dlt-error", 1,
                 System.currentTimeMillis(),"test-key", filingMessage.getPayload(), headers);
 
         ProducerRecord<String, Object> result = underTest.onSend(onSendRecord);
@@ -108,7 +108,7 @@ public class RetryableTopicErrorInterceptorTest {
                 new RecordHeader(EXCEPTION_CAUSE_FQCN, NonRetryableException.class.getName().getBytes())
         );
 
-        ProducerRecord<String, Object> onSendRecord = new ProducerRecord<>("test-topic-error", 1,
+        ProducerRecord<String, Object> onSendRecord = new ProducerRecord<>("test-topic-dlt-error", 1,
                 System.currentTimeMillis(),"test-key", filingMessage.getPayload(), headers);
 
         ProducerRecord<String, Object> result = underTest.onSend(onSendRecord);
@@ -117,7 +117,7 @@ public class RetryableTopicErrorInterceptorTest {
         underTest.close();
 
         assertThat(result, is(notNullValue()));
-        assertThat(result.topic(), is("test-topic-error"));
+        assertThat(result.topic(), is("test-topic-dlt-error"));
         assertThat(result.key(), is("test-key"));
         assertThat(result.value(), is(filingMessage.getPayload()));
 
@@ -134,7 +134,7 @@ public class RetryableTopicErrorInterceptorTest {
                 new RecordHeader(EXCEPTION_STACKTRACE, NonRetryableErrorException.class.getName().getBytes())
         );
 
-        ProducerRecord<String, Object> onSendRecord = new ProducerRecord<>("test-topic-error", 1,
+        ProducerRecord<String, Object> onSendRecord = new ProducerRecord<>("test-topic-dlt-error", 1,
                 System.currentTimeMillis(),"test-key", filingMessage.getPayload(), headers);
 
         ProducerRecord<String, Object> result = underTest.onSend(onSendRecord);
@@ -160,7 +160,7 @@ public class RetryableTopicErrorInterceptorTest {
                 new RecordHeader(EXCEPTION_STACKTRACE, NonRetryableException.class.getName().getBytes())
         );
 
-        ProducerRecord<String, Object> onSendRecord = new ProducerRecord<>("test-topic-error", 1,
+        ProducerRecord<String, Object> onSendRecord = new ProducerRecord<>("test-topic-dlt-error", 1,
                 System.currentTimeMillis(),"test-key", filingMessage.getPayload(), headers);
 
         ProducerRecord<String, Object> result = underTest.onSend(onSendRecord);
@@ -169,7 +169,7 @@ public class RetryableTopicErrorInterceptorTest {
         underTest.close();
 
         assertThat(result, is(notNullValue()));
-        assertThat(result.topic(), is("test-topic-error"));
+        assertThat(result.topic(), is("test-topic-dlt-error"));
         assertThat(result.key(), is("test-key"));
         assertThat(result.value(), is(filingMessage.getPayload()));
 

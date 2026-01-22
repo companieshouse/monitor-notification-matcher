@@ -22,7 +22,7 @@ public class RetryableTopicErrorInterceptor implements ProducerInterceptor<Strin
     public ProducerRecord<String, Object> onSend(final ProducerRecord<String, Object> record) {
         LOGGER.trace("onSend(record=%s) method called.".formatted(record));
 
-        String nextTopic = record.topic().contains("-error") ? getNextErrorTopic(record) : record.topic();
+        String nextTopic = record.topic().contains("-dlt-error") ? getNextErrorTopic(record) : record.topic();
 
         LOGGER.info(String.format("Moving record into new topic: %s with value: %s",
                         nextTopic, record.value()), DataMapHolder.getLogMap());
@@ -59,7 +59,7 @@ public class RetryableTopicErrorInterceptor implements ProducerInterceptor<Strin
                 || (header2 != null
                 && new String(header2.value()).contains(
                 NonRetryableErrorException.class.getName())))
-                ? record.topic().replace("-error", "-invalid") : record.topic();
+                ? record.topic().replace("-dlt-error", "-invalid") : record.topic();
     }
 }
 
