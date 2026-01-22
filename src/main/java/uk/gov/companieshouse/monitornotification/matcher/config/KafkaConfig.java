@@ -121,7 +121,7 @@ public class KafkaConfig {
                 .fixedBackOff(delay)
                 .useSingleTopicForSameIntervals()
                 .retryTopicSuffix("-retry")
-                .dltSuffix("-error")
+                .dltSuffix("-dlt-error")
                 .dltProcessingFailureStrategy(DltStrategy.FAIL_ON_ERROR)
                 .retryOn(RetryableException.class)
                 .create(template);
