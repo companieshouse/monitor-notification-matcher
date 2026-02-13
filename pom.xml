@@ -30,7 +30,7 @@
     <jib-maven-plugin.version>3.4.6</jib-maven-plugin.version>
 
     <software.amazon.awssdk.version>2.31.78</software.amazon.awssdk.version>
-    <avro.version>1.12.0</avro.version>
+    <avro.version>1.12.1</avro.version>
 
     <commons-text.version>1.13.0</commons-text.version>
     <wiremock.version>3.11.0</wiremock.version>
