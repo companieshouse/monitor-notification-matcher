@@ -22,23 +22,28 @@
     <maven.compiler.target>${java.version}</maven.compiler.target>
     <maven.compiler.release>${java.version}</maven.compiler.release>
 
-    <spring.boot.version>3.5.6</spring.boot.version>
+    <spring.boot.version>3.5.13</spring.boot.version>
 
     <maven-surefire.version>3.5.2</maven-surefire.version>
     <maven-surefire-plugin.version>${maven-surefire.version}</maven-surefire-plugin.version>
     <maven-failsafe-plugin.version>${maven-surefire.version}</maven-failsafe-plugin.version>
-    <jib-maven-plugin.version>3.4.6</jib-maven-plugin.version>
+    <jib-maven-plugin.version>3.5.1</jib-maven-plugin.version>
 
     <software.amazon.awssdk.version>2.31.78</software.amazon.awssdk.version>
-    <avro.version>1.12.0</avro.version>
+    <avro.version>1.12.1</avro.version>
 
-    <commons-text.version>1.13.0</commons-text.version>
+    <commons-text.version>1.15.0</commons-text.version>
     <wiremock.version>3.11.0</wiremock.version>
     <system-rules.version>1.19.0</system-rules.version>
-    <http-client.version>5.5</http-client.version>
+    <http-client.version>5.6</http-client.version>
 
     <skip.unit.tests>false</skip.unit.tests>
     <skip.integration.tests>false</skip.integration.tests>
+
+    <!-- transitive dependencies with vulnerabilities in previous versions -->
+    <commons-lang3.version>3.20.0</commons-lang3.version>
+    <msgpack-core.version>0.9.11</msgpack-core.version>
+    <tomcat-embed.version>11.0.21</tomcat-embed.version>
 
     <!--companies house-->
     <private-api-sdk-java.version>4.0.436</private-api-sdk-java.version>
@@ -64,6 +69,7 @@
 
   <dependencyManagement>
     <dependencies>
+
       <dependency>
         <groupId>org.springframework.boot</groupId>
         <artifactId>spring-boot-dependencies</artifactId>
@@ -71,6 +77,46 @@
         <type>pom</type>
         <scope>import</scope>
       </dependency>
+
+      <!-- Transitive dependencies with vulnerabilities in previous versions -->
+      <!-- To be reviewed regularly to ensure they are up to date and secure -->
+
+      <!-- CVE-2025-48924 -->
+      <dependency>
+        <groupId>org.apache.commons</groupId>
+        <artifactId>commons-lang3</artifactId>
+        <version>${commons-lang3.version}</version>
+        <scope>compile</scope>
+      </dependency>
+
+      <!-- CVE-2026-21452 -->
+      <dependency>
+        <groupId>org.msgpack</groupId>
+        <artifactId>msgpack-core</artifactId>
+        <version>${msgpack-core.version}</version>
+        <scope>compile</scope>
+      </dependency>
+
+      <!-- CVE-2026-34483 -->
+      <dependency>
+        <groupId>org.apache.tomcat.embed</groupId>
+        <artifactId>tomcat-embed-core</artifactId>
+        <version>${tomcat-embed.version}</version>
+        <scope>compile</scope>
+      </dependency>
+      <dependency>
+        <groupId>org.apache.tomcat.embed</groupId>
+        <artifactId>tomcat-embed-el</artifactId>
+        <version>${tomcat-embed.version}</version>
+        <scope>compile</scope>
+      </dependency>
+      <dependency>
+        <groupId>org.apache.tomcat.embed</groupId>
+        <artifactId>tomcat-embed-websocket</artifactId>
+        <version>${tomcat-embed.version}</version>
+        <scope>compile</scope>
+      </dependency>
+
     </dependencies>
   </dependencyManagement>
 
@@ -138,12 +184,20 @@
       <groupId>uk.gov.companieshouse</groupId>
       <artifactId>ch-kafka</artifactId>
       <version>${ch-kafka.version}</version>
+      <exclusions>
+        <exclusion>
+          <groupId>commons-lang</groupId>
+          <artifactId>commons-lang</artifactId>
+        </exclusion>
+      </exclusions>
     </dependency>
+
     <dependency>
       <groupId>uk.gov.companieshouse</groupId>
       <artifactId>structured-logging</artifactId>
       <version>${structured-logging.version}</version>
     </dependency>
+
     <dependency>
       <groupId>uk.gov.companieshouse</groupId>
       <artifactId>sdk-manager-java</artifactId>
@@ -167,11 +221,13 @@
         </exclusion>
       </exclusions>
     </dependency>
+
     <dependency>
       <groupId>uk.gov.companieshouse</groupId>
       <artifactId>private-api-sdk-java</artifactId>
       <version>${private-api-sdk-java.version}</version>
     </dependency>
+
     <dependency>
       <groupId>uk.gov.companieshouse</groupId>
       <artifactId>kafka-models</artifactId>

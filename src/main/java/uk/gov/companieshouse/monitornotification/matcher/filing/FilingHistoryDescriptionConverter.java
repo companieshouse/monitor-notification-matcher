@@ -1,7 +1,7 @@
 package uk.gov.companieshouse.monitornotification.matcher.filing;
 
 import java.util.Map;
-import org.apache.commons.lang.text.StrSubstitutor;
+import org.apache.commons.text.StringSubstitutor;
 import org.springframework.stereotype.Component;
 import uk.gov.companieshouse.logging.Logger;
 import uk.gov.companieshouse.monitornotification.matcher.config.properties.FilingHistoryDescriptions;
@@ -55,8 +55,8 @@ public class FilingHistoryDescriptionConverter {
      * @param parameters Key/value pairs to replace parameters within the description. The key is the parameter name.
      * @return Description with parameters populated
      */
-    private String populateParameters(String description, Map<String, String> parameters) {
-        var sub = new StrSubstitutor(parameters, "{", "}");
+    private String populateParameters(final String description, final Map<String, String> parameters) {
+        var sub = new StringSubstitutor(parameters, "{", "}");
         return sub.replace(description);
     }
 }
