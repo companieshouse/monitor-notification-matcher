@@ -112,8 +112,8 @@ public class MessageProcessor {
         data.setFilingDescription(history.getDescription());
         data.setFilingType(history.getType());
         data.setIsDelete(extractor.isDelete(payload));
-        data.setChsURL(properties.getChsUrl());
-        data.setMonitorURL(properties.getMonitorUrl());
+        data.setChsUrl(properties.getChsUrl());
+        data.setMonitorUrl(properties.getMonitorUrl());
         data.setFrom("Companies House <noreply@companieshouse.gov.uk>");
         data.setSubject("Company number %s %s".formatted(details.getCompanyNumber(), details.getCompanyName()));
 

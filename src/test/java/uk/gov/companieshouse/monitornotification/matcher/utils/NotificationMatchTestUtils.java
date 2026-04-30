@@ -290,8 +290,8 @@ public class NotificationMatchTestUtils {
         data.setFilingDescription(filingHistory.getDescription());
         data.setFilingType(filingHistory.getType());
         data.setIsDelete(isDelete);
-        data.setChsURL(CHS_URL);
-        data.setMonitorURL(MONITOR_URL);
+        data.setChsUrl(CHS_URL);
+        data.setMonitorUrl(MONITOR_URL);
         data.setFrom("Companies House <noreply@companieshouse.gov.uk>");
         data.setSubject("Company number %s %s".formatted(
                 companyDetails.getCompanyNumber(), companyDetails.getCompanyName()));
