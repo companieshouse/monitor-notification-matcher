@@ -1,14 +1,8 @@
 package uk.gov.companieshouse.monitornotification.matcher.consumer;
 
-import static org.hamcrest.MatcherAssert.assertThat;
-import static org.hamcrest.Matchers.is;
-import static org.hamcrest.Matchers.notNullValue;
-import static org.junit.jupiter.api.Assertions.assertTrue;
-import static uk.gov.companieshouse.monitornotification.matcher.utils.NotificationMatchTestUtils.buildFilingUpdateMessage;
-
+import com.github.tomakehurst.wiremock.junit5.WireMockTest;
 import monitor.filing;
 import org.junit.jupiter.api.Test;
-import org.junit.jupiter.api.TestInstance;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.SpringBootTest;
@@ -17,13 +11,17 @@ import org.springframework.boot.test.system.OutputCaptureExtension;
 import org.springframework.messaging.Message;
 import org.springframework.test.context.ActiveProfiles;
 import uk.gov.companieshouse.monitornotification.matcher.logging.DataMapHolder;
-import uk.gov.companieshouse.monitornotification.matcher.utils.DisabledIfDockerUnavailable;
 
-@ExtendWith(OutputCaptureExtension.class)
-@SpringBootTest(webEnvironment = SpringBootTest.WebEnvironment.RANDOM_PORT)
-@TestInstance(TestInstance.Lifecycle.PER_CLASS)
+import static org.hamcrest.MatcherAssert.assertThat;
+import static org.hamcrest.Matchers.is;
+import static org.hamcrest.Matchers.notNullValue;
+import static org.junit.jupiter.api.Assertions.assertTrue;
+import static uk.gov.companieshouse.monitornotification.matcher.utils.NotificationMatchTestUtils.buildFilingUpdateMessage;
+
+@SpringBootTest
+@WireMockTest(httpPort = 4081)
 @ActiveProfiles("test")
-@DisabledIfDockerUnavailable
+@ExtendWith(OutputCaptureExtension.class)
 class MessageLoggingAspectIntegrationTest {
 
     @Autowired

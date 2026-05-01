@@ -47,8 +47,8 @@ class MessageSendTest {
         messageSendData.setFilingDescription("filing-description");
         messageSendData.setFilingType("AP01");
         messageSendData.setIsDelete(false);
-        messageSendData.setChsURL("http://test.chs-url-test");
-        messageSendData.setMonitorURL("http://test.monitor-url-test");
+        messageSendData.setChsUrl("http://test.chs-url-test");
+        messageSendData.setMonitorUrl("http://test.monitor-url-test");
         messageSendData.setFrom("recipient@chtest.gov.uk");
         messageSendData.setSubject("Test Email");
         return messageSendData;
