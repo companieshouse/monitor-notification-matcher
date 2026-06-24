@@ -43,7 +43,6 @@
     <commons-lang3.version>3.20.0</commons-lang3.version>
     <msgpack-core.version>0.9.11</msgpack-core.version>
     <tomcat-embed.version>11.0.22</tomcat-embed.version>
-    <opentelemetry.version>2.29.0</opentelemetry.version>
     <log4j.version>2.26.0</log4j.version>
 
     <!--companies house-->
