@@ -27,7 +27,7 @@ import uk.gov.companieshouse.monitornotification.matcher.consumer.NotificationMa
 @SpringBootTest
 @EmbeddedKafka(
         partitions = 1,
-        brokerProperties = {"listeners=PLAINTEXT://localhost:9092", "port=9092" }
+    bootstrapServersProperty = "spring.kafka.bootstrap-servers"
 )
 @TestInstance(TestInstance.Lifecycle.PER_CLASS)
 @DirtiesContext(classMode = DirtiesContext.ClassMode.AFTER_CLASS)

@@ -28,10 +28,9 @@ spring:
       chs-url: ${CHS_URL:http://chs.local}
       monitor-url: ${CHS_MONITOR_GUI_URL:http://follow.chs.local}
 
-  data:
-    mongodb:
-      uri: ${MONGODB_URL:mongodb://mongo:27017}
-      database: ${MONGO_DATABASE:monitor}
+  mongodb:
+    uri: ${MONGODB_URL:mongodb://mongo:27017}
+    database: ${MONGO_DATABASE:monitor}
 
 management:
   endpoints:

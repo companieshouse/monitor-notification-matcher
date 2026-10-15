@@ -1,7 +1,10 @@
 package uk.gov.companieshouse.monitornotification.matcher.consumer;
 
-import com.github.tomakehurst.wiremock.junit5.WireMockTest;
-import monitor.filing;
+import static org.hamcrest.MatcherAssert.assertThat;
+import static org.hamcrest.Matchers.is;
+import static org.hamcrest.Matchers.notNullValue;
+import org.junit.jupiter.api.AfterAll;
+import static org.junit.jupiter.api.Assertions.assertTrue;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -10,19 +13,35 @@ import org.springframework.boot.test.system.CapturedOutput;
 import org.springframework.boot.test.system.OutputCaptureExtension;
 import org.springframework.messaging.Message;
 import org.springframework.test.context.ActiveProfiles;
-import uk.gov.companieshouse.monitornotification.matcher.logging.DataMapHolder;
+import org.springframework.test.context.DynamicPropertyRegistry;
+import org.springframework.test.context.DynamicPropertySource;
 
-import static org.hamcrest.MatcherAssert.assertThat;
-import static org.hamcrest.Matchers.is;
-import static org.hamcrest.Matchers.notNullValue;
-import static org.junit.jupiter.api.Assertions.assertTrue;
+import com.github.tomakehurst.wiremock.WireMockServer;
+import com.github.tomakehurst.wiremock.core.WireMockConfiguration;
+
+import monitor.filing;
+import uk.gov.companieshouse.monitornotification.matcher.logging.DataMapHolder;
 import static uk.gov.companieshouse.monitornotification.matcher.utils.NotificationMatchTestUtils.buildFilingUpdateMessage;
 
 @SpringBootTest
-@WireMockTest(httpPort = 4081)
 @ActiveProfiles("test")
 @ExtendWith(OutputCaptureExtension.class)
 class MessageLoggingAspectIntegrationTest {
+
+    private static final WireMockServer wireMock = new WireMockServer(
+            WireMockConfiguration.options().dynamicPort());
+
+    @DynamicPropertySource
+    static void overrideProperties(DynamicPropertyRegistry registry) {
+        wireMock.start();
+        registry.add("spring.internal.private.api.url", wireMock::baseUrl);
+        registry.add("spring.internal.kafka.api.url", wireMock::baseUrl);
+    }
+
+    @AfterAll
+    static void stopWireMock() {
+        wireMock.stop();
+    }
 
     @Autowired
     private NotificationMatchConsumer consumer;

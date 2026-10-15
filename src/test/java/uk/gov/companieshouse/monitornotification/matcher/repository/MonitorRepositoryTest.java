@@ -3,33 +3,32 @@ package uk.gov.companieshouse.monitornotification.matcher.repository;
 
 import static org.hamcrest.MatcherAssert.assertThat;
 import static org.hamcrest.Matchers.is;
-import static uk.gov.companieshouse.monitornotification.matcher.utils.NotificationMatchTestUtils.USER_ID;
-import static uk.gov.companieshouse.monitornotification.matcher.utils.NotificationMatchTestUtils.KIND;
-import static uk.gov.companieshouse.monitornotification.matcher.utils.NotificationMatchTestUtils.CREATED_AT;
-import static uk.gov.companieshouse.monitornotification.matcher.utils.NotificationMatchTestUtils.MESSAGE_ID;
-import static uk.gov.companieshouse.monitornotification.matcher.utils.NotificationMatchTestUtils.APP_ID;
-import static uk.gov.companieshouse.monitornotification.matcher.utils.NotificationMatchTestUtils.DATA_PAYLOAD;
-
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.boot.test.autoconfigure.data.mongo.DataMongoTest;
+import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.test.context.DynamicPropertyRegistry;
 import org.springframework.test.context.DynamicPropertySource;
-import org.testcontainers.containers.MongoDBContainer;
 import org.testcontainers.junit.jupiter.Container;
 import org.testcontainers.junit.jupiter.Testcontainers;
+import org.testcontainers.mongodb.MongoDBContainer;
 
 import uk.gov.companieshouse.monitornotification.matcher.repository.model.MonitorMatchDocument;
+import static uk.gov.companieshouse.monitornotification.matcher.utils.NotificationMatchTestUtils.APP_ID;
+import static uk.gov.companieshouse.monitornotification.matcher.utils.NotificationMatchTestUtils.CREATED_AT;
+import static uk.gov.companieshouse.monitornotification.matcher.utils.NotificationMatchTestUtils.DATA_PAYLOAD;
+import static uk.gov.companieshouse.monitornotification.matcher.utils.NotificationMatchTestUtils.KIND;
+import static uk.gov.companieshouse.monitornotification.matcher.utils.NotificationMatchTestUtils.MESSAGE_ID;
+import static uk.gov.companieshouse.monitornotification.matcher.utils.NotificationMatchTestUtils.USER_ID;
 
 @Testcontainers(disabledWithoutDocker = true)
-@DataMongoTest
+@SpringBootTest
 public class MonitorRepositoryTest {
     @Container
     static MongoDBContainer mongoDBContainer = new MongoDBContainer("mongo:6.0");
 
     @DynamicPropertySource
     static void setProperties(DynamicPropertyRegistry registry) {
-        registry.add("spring.data.mongodb.uri", mongoDBContainer::getReplicaSetUrl);
+        registry.add("spring.mongodb.uri", mongoDBContainer::getReplicaSetUrl);
     }
 
     @Autowired
