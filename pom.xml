@@ -5,7 +5,7 @@
   <parent>
     <groupId>uk.gov.companieshouse</groupId>
     <artifactId>companies-house-parent</artifactId>
-    <version>2.1.12</version>
+    <version>3.0.0</version>
     <relativePath/>
   </parent>
 
@@ -22,10 +22,10 @@
     <maven.compiler.target>${java.version}</maven.compiler.target>
     <maven.compiler.release>${java.version}</maven.compiler.release>
 
-    <spring.boot.version>3.5.15</spring.boot.version>
+    <spring.boot.version>4.1.1</spring.boot.version>
 
-    <maven-surefire-plugin.version>3.5.5</maven-surefire-plugin.version>
-    <maven-failsafe-plugin.version>3.5.5</maven-failsafe-plugin.version>
+    <maven-surefire-plugin.version>3.5.6</maven-surefire-plugin.version>
+    <maven-failsafe-plugin.version>3.5.6</maven-failsafe-plugin.version>
     <jib-maven-plugin.version>3.5.1</jib-maven-plugin.version>
 
     <software.amazon.awssdk.version>2.31.78</software.amazon.awssdk.version>
@@ -42,15 +42,12 @@
     <!-- transitive dependencies with vulnerabilities in previous versions -->
     <commons-lang3.version>3.20.0</commons-lang3.version>
     <msgpack-core.version>0.9.11</msgpack-core.version>
-    <tomcat-embed.version>11.0.22</tomcat-embed.version>
-    <log4j.version>2.26.0</log4j.version>
+    <tomcat-embed.version>11.0.26</tomcat-embed.version>
+    <log4j.version>2.26.1</log4j.version>
 
     <!--companies house-->
-    <private-api-sdk-java.version>6.0.2</private-api-sdk-java.version>
-    <sdk-manager-java.version>3.0.14</sdk-manager-java.version>
-    <structured-logging.version>3.0.57</structured-logging.version>
-    <ch-kafka.version>3.0.10</ch-kafka.version>
-    <kafka-models.version>3.0.31</kafka-models.version>
+    <private-api-sdk-java.version>7.2.38</private-api-sdk-java.version>
+    <ch.dependency.bom.version>0.1.28</ch.dependency.bom.version>
 
     <!--explicit versions of transitive dependencies with vulnerabilities in previous versions-->
     <jayway-jsonpath.version>2.9.0</jayway-jsonpath.version>
@@ -63,13 +60,18 @@
     <sonar.projectName>monitor-notification-matcher</sonar.projectName>
     <sonar.projectKey>uk.gov.companieshouse:monitor-notification-matcher</sonar.projectKey>
     <sonar.token>${CODE_ANALYSIS_TOKEN}</sonar.token>
-    <sonar.login></sonar.login>
-    <sonar.password></sonar.password>
   </properties>
 
   <dependencyManagement>
     <dependencies>
-
+    
+      <dependency>
+        <groupId>uk.gov.companieshouse</groupId>
+        <artifactId>ch-dependency-bom</artifactId>
+        <version>${ch.dependency.bom.version}</version>
+        <type>pom</type>
+        <scope>import</scope>
+      </dependency>
       <dependency>
         <groupId>org.springframework.boot</groupId>
         <artifactId>spring-boot-dependencies</artifactId>
@@ -154,12 +156,12 @@
       <artifactId>spring-boot-starter-web</artifactId>
     </dependency>
     <dependency>
-      <groupId>org.springframework.kafka</groupId>
-      <artifactId>spring-kafka</artifactId>
+      <groupId>org.springframework.boot</groupId>
+      <artifactId>spring-boot-starter-kafka</artifactId>
     </dependency>
     <dependency>
       <groupId>org.springframework.boot</groupId>
-      <artifactId>spring-boot-starter-aop</artifactId>
+      <artifactId>spring-boot-starter-aspectj</artifactId>
     </dependency>
     <dependency>
       <groupId>org.springframework.boot</groupId>
@@ -200,12 +202,16 @@
       <artifactId>httpclient5</artifactId>
       <version>${http-client.version}</version>
     </dependency>
+    <dependency>
+      <groupId>org.apache.httpcomponents</groupId>
+      <artifactId>httpclient</artifactId>
+      <version>4.5.14</version>
+    </dependency>
 
     <!-- Internal Dependencies -->
     <dependency>
       <groupId>uk.gov.companieshouse</groupId>
       <artifactId>ch-kafka</artifactId>
-      <version>${ch-kafka.version}</version>
       <exclusions>
         <exclusion>
           <groupId>commons-lang</groupId>
@@ -217,7 +223,6 @@
     <dependency>
       <groupId>uk.gov.companieshouse</groupId>
       <artifactId>structured-logging</artifactId>
-      <version>${structured-logging.version}</version>
       <exclusions>
         <exclusion>
           <groupId>io.opentelemetry.instrumentation</groupId>
@@ -229,7 +234,6 @@
     <dependency>
       <groupId>uk.gov.companieshouse</groupId>
       <artifactId>sdk-manager-java</artifactId>
-      <version>${sdk-manager-java.version}</version>
       <exclusions>
         <exclusion>
           <groupId>com.nimbusds</groupId>
@@ -259,7 +263,6 @@
     <dependency>
       <groupId>uk.gov.companieshouse</groupId>
       <artifactId>kafka-models</artifactId>
-      <version>${kafka-models.version}</version>
       <exclusions>
         <exclusion>
           <groupId>commons-fileupload</groupId>
@@ -298,6 +301,12 @@
     </dependency>
 
     <dependency>
+      <groupId>org.springframework.boot</groupId>
+      <artifactId>spring-boot-starter-data-mongodb-test</artifactId>
+      <scope>test</scope>
+    </dependency>
+
+    <dependency>
       <groupId>com.github.stefanbirkner</groupId>
       <artifactId>system-rules</artifactId>
       <version>${system-rules.version}</version>
@@ -308,12 +317,6 @@
       <groupId>org.springframework.kafka</groupId>
       <artifactId>spring-kafka-test</artifactId>
       <scope>test</scope>
-      <exclusions>
-        <exclusion>
-          <groupId>org.pcollections</groupId>
-          <artifactId>pcollections</artifactId>
-        </exclusion>
-      </exclusions>
     </dependency>
 
     <!-- You might also need the core module -->
@@ -325,19 +328,19 @@
 
     <dependency>
       <groupId>org.testcontainers</groupId>
-      <artifactId>kafka</artifactId>
+      <artifactId>testcontainers-kafka</artifactId>
       <scope>test</scope>
     </dependency>
 
     <dependency>
       <groupId>org.testcontainers</groupId>
-      <artifactId>junit-jupiter</artifactId>
+      <artifactId>testcontainers-junit-jupiter</artifactId>
       <scope>test</scope>
     </dependency>
 
     <dependency>
       <groupId>org.testcontainers</groupId>
-      <artifactId>mongodb</artifactId>
+      <artifactId>testcontainers-mongodb</artifactId>
       <scope>test</scope>
       <exclusions>
         <exclusion>

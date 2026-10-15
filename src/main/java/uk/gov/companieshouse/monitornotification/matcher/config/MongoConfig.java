@@ -13,8 +13,8 @@ public class MongoConfig {
     private final String mongoUri;
     private final String mongoDatabase;
 
-    public MongoConfig(@Value("${spring.data.mongodb.uri}") String mongoUri,
-            @Value("${spring.data.mongodb.database}") String mongoDatabase) {
+    public MongoConfig(@Value("${spring.mongodb.uri}") String mongoUri,
+            @Value("${spring.mongodb.database}") String mongoDatabase) {
         this.mongoUri = mongoUri;
         this.mongoDatabase = mongoDatabase;
     }
